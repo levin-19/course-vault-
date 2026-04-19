@@ -56,7 +56,12 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
-      await _profileService.createUserProfile(newUser);
+      try {
+        await _profileService.createUserProfile(newUser);
+      } catch (e) {
+        // Profile creation failed, but user was created - continue
+      }
+
       _appUser = newUser;
       _errorMessage = null;
       notifyListeners();
@@ -65,8 +70,8 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = _mapAuthErrorCode(e.code, fallback: e.message);
       notifyListeners();
       return false;
-    } catch (_) {
-      _errorMessage = 'Unexpected error occurred during sign up.';
+    } catch (e) {
+      _errorMessage = 'Unexpected error occurred during sign up: $e';
       notifyListeners();
       return false;
     } finally {

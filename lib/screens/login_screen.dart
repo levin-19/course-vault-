@@ -226,20 +226,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: AppTheme.spacingL),
 
                         // Divider
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
                             vertical: AppTheme.spacingM,
                           ),
                           child: Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Divider(
                                   color: AppColors.borderLight,
                                   thickness: 1,
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
+                                padding: EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacingM,
                                 ),
                                 child: Text(
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Divider(
                                   color: AppColors.borderLight,
                                   thickness: 1,
@@ -314,10 +314,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: AppTheme.spacingXXL),
 
                         // Footer
-                        Center(
+                        const Center(
                           child: Text(
                             AppConstants.secureAccessFooter,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w400,
                               color: AppColors.textHint,
@@ -348,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: BoxDecoration(
             gradient: AppColors.premiumGradient,
             borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-            boxShadow: [AppTheme.shadowMedium],
+            boxShadow: const [AppTheme.shadowMedium],
           ),
           child: const Icon(
             Icons.school,
@@ -359,9 +359,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: AppTheme.spacingL),
 
         // App Name
-        Text(
+        const Text(
           AppConstants.appName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -371,9 +371,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: AppTheme.spacingS),
 
         // Tagline
-        Text(
+        const Text(
           'Welcome Back',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,

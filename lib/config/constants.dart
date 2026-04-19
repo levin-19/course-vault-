@@ -1,5 +1,6 @@
 /// Application Constants
 /// Central place for all static strings, lists, and values used throughout the app
+library;
 
 class AppConstants {
   AppConstants._(); // Private constructor

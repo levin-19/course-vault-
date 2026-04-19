@@ -12,7 +12,6 @@ import 'screens/signup_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Note: Update firebase_options.dart with your actual Firebase configuration
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

@@ -38,12 +38,23 @@ class AppUser {
       'department': department,
       'semester': semester,
       'universityEmail': universityEmail,
-      'createdAt': createdAt,
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
   /// Create from map (Firestore/database)
   factory AppUser.fromMap(Map<String, dynamic> map) {
+    DateTime? parsedCreatedAt;
+    final dynamic createdAtValue = map['createdAt'];
+
+    if (createdAtValue != null) {
+      if (createdAtValue is String) {
+        parsedCreatedAt = DateTime.parse(createdAtValue);
+      } else if (createdAtValue is DateTime) {
+        parsedCreatedAt = createdAtValue;
+      }
+    }
+
     return AppUser(
       uid: (map['uid'] ?? '') as String,
       name: (map['name'] ?? '') as String,
@@ -54,9 +65,7 @@ class AppUser {
       department: map['department'] as String?,
       semester: map['semester'] as String?,
       universityEmail: map['universityEmail'] as String?,
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'] as String)
-          : null,
+      createdAt: parsedCreatedAt,
     );
   }
 

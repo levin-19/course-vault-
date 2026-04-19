@@ -173,21 +173,21 @@ class AppTheme {
       ),
 
       // Text Theme
-      textTheme: TextTheme(
+      textTheme: const TextTheme(
         // Headlines
-        headlineLarge: const TextStyle(
+        headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
           letterSpacing: -0.5,
         ),
-        headlineMedium: const TextStyle(
+        headlineMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
           letterSpacing: 0,
         ),
-        headlineSmall: const TextStyle(
+        headlineSmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
@@ -195,19 +195,19 @@ class AppTheme {
         ),
 
         // Titles
-        titleLarge: const TextStyle(
+        titleLarge: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           letterSpacing: 0.15,
         ),
-        titleMedium: const TextStyle(
+        titleMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           letterSpacing: 0.1,
         ),
-        titleSmall: const TextStyle(
+        titleSmall: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
@@ -215,19 +215,19 @@ class AppTheme {
         ),
 
         // Body
-        bodyLarge: const TextStyle(
+        bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
           letterSpacing: 0.15,
         ),
-        bodyMedium: const TextStyle(
+        bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: AppColors.textSecondary,
           letterSpacing: 0.25,
         ),
-        bodySmall: const TextStyle(
+        bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: AppColors.textSecondary,
@@ -235,19 +235,19 @@ class AppTheme {
         ),
 
         // Labels
-        labelLarge: const TextStyle(
+        labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           letterSpacing: 0.1,
         ),
-        labelMedium: const TextStyle(
+        labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppColors.textSecondary,
           letterSpacing: 0.5,
         ),
-        labelSmall: const TextStyle(
+        labelSmall: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
           color: AppColors.textSecondary,

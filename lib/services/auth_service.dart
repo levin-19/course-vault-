@@ -1,7 +1,4 @@
-import 'dart:convert';
-import 'dart:math';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/app_user.dart';
 
@@ -13,33 +10,29 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  static const String _usersKey = 'cv_users';
-  static const String _sessionUidKey = 'cv_session_uid';
+  late final FirebaseAuth _firebaseAuth;
+
+  AuthService() {
+    _firebaseAuth = FirebaseAuth.instance;
+  }
 
   Future<AppUser?> restoreSession() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? uid = prefs.getString(_sessionUidKey);
+    try {
+      final User? currentUser = _firebaseAuth.currentUser;
 
-    if (uid == null) {
-      return null;
-    }
-
-    final List<Map<String, dynamic>> users = await _readUsers();
-    Map<String, dynamic>? record;
-
-    for (final Map<String, dynamic> user in users) {
-      if (user['uid'] == uid) {
-        record = user;
-        break;
+      if (currentUser == null) {
+        return null;
       }
-    }
 
-    if (record == null) {
-      await prefs.remove(_sessionUidKey);
+      return AppUser(
+        uid: currentUser.uid,
+        name: currentUser.displayName ?? '',
+        email: currentUser.email ?? '',
+        avatarUrl: currentUser.photoURL,
+      );
+    } catch (_) {
       return null;
     }
-
-    return _toAppUser(record);
   }
 
   Future<AppUser> signUp({
@@ -47,187 +40,137 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final List<Map<String, dynamic>> users = await _readUsers();
-    final String emailLower = email.trim().toLowerCase();
+    try {
+      final UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
 
-    final bool emailExists = users.any(
-      (Map<String, dynamic> u) =>
-          (u['email'] as String).toLowerCase() == emailLower,
-    );
+      final User? user = userCredential.user;
 
-    if (emailExists) {
-      throw const AuthException(
-        'email-already-in-use',
-        'This email is already in use.',
+      if (user == null) {
+        throw const AuthException(
+          'user-not-found',
+          'Failed to create user account.',
+        );
+      }
+
+      // Update display name
+      await user.updateDisplayName(name.trim());
+      await user.reload();
+
+      return AppUser(
+        uid: user.uid,
+        name: name.trim(),
+        email: user.email ?? '',
+        avatarUrl: user.photoURL,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code, e.message ?? 'An error occurred');
+    } catch (e) {
+      throw AuthException(
+        'unknown-error',
+        'An unexpected error occurred: $e',
       );
     }
-
-    final String uid = _generateUid();
-    final Map<String, dynamic> record = <String, dynamic>{
-      'uid': uid,
-      'name': name.trim(),
-      'email': emailLower,
-      'password': password,
-      'avatarUrl': null,
-    };
-
-    users.add(record);
-    await _writeUsers(users);
-    await _saveSession(uid);
-
-    return AppUser(
-      uid: uid,
-      name: name.trim(),
-      email: emailLower,
-      avatarUrl: null,
-    );
   }
 
   Future<AppUser> signIn({
     required String email,
     required String password,
   }) async {
-    final List<Map<String, dynamic>> users = await _readUsers();
-    final String emailLower = email.trim().toLowerCase();
+    try {
+      final UserCredential userCredential =
+          await _firebaseAuth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
 
-    Map<String, dynamic>? match;
-    for (final Map<String, dynamic> u in users) {
-      final String storedEmail = (u['email']?.toString() ?? '').toLowerCase();
-      final String storedPassword = u['password']?.toString() ?? '';
-      if (storedEmail == emailLower && storedPassword == password) {
-        match = u;
-        break;
+      final User? user = userCredential.user;
+
+      if (user == null) {
+        throw const AuthException(
+          'user-not-found',
+          'Failed to sign in user.',
+        );
       }
+
+      return AppUser(
+        uid: user.uid,
+        name: user.displayName ?? '',
+        email: user.email ?? '',
+        avatarUrl: user.photoURL,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code, e.message ?? 'An error occurred');
+    } catch (e) {
+      throw AuthException(
+        'unknown-error',
+        'An unexpected error occurred: $e',
+      );
     }
-
-    if (match == null) {
-      throw const AuthException(
-          'invalid-credential', 'Invalid email or password.');
-    }
-
-    await _saveSession(match['uid'] as String);
-
-    return _toAppUser(match);
   }
 
   Future<void> signOut() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_sessionUidKey);
+    try {
+      await _firebaseAuth.signOut();
+    } catch (e) {
+      throw AuthException(
+        'sign-out-error',
+        'Failed to sign out: $e',
+      );
+    }
   }
 
   Future<void> updatePassword({
     required String uid,
     required String newPassword,
   }) async {
-    final List<Map<String, dynamic>> users = await _readUsers();
-    bool found = false;
+    try {
+      final User? currentUser = _firebaseAuth.currentUser;
 
-    for (final Map<String, dynamic> u in users) {
-      if (u['uid'] == uid) {
-        u['password'] = newPassword;
-        found = true;
+      if (currentUser == null || currentUser.uid != uid) {
+        throw const AuthException(
+          'user-not-found',
+          'Current user not found.',
+        );
       }
-    }
 
-    if (!found) {
-      throw const AuthException('user-not-found', 'User not found.');
+      await currentUser.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code, e.message ?? 'An error occurred');
+    } catch (e) {
+      throw AuthException(
+        'unknown-error',
+        'Failed to update password: $e',
+      );
     }
-
-    await _writeUsers(users);
   }
 
   Future<void> updateDisplayName({
     required String uid,
     required String name,
   }) async {
-    final List<Map<String, dynamic>> users = await _readUsers();
-    bool found = false;
-
-    for (final Map<String, dynamic> u in users) {
-      if (u['uid'] == uid) {
-        u['name'] = name;
-        found = true;
-      }
-    }
-
-    if (!found) {
-      throw const AuthException('user-not-found', 'User not found.');
-    }
-
-    await _writeUsers(users);
-  }
-
-  Future<List<Map<String, dynamic>>> _readUsers() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? raw = prefs.getString(_usersKey);
-
-    if (raw == null || raw.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
     try {
-      final dynamic decoded = jsonDecode(raw);
-      if (decoded is! List) {
-        return <Map<String, dynamic>>[];
+      final User? currentUser = _firebaseAuth.currentUser;
+
+      if (currentUser == null || currentUser.uid != uid) {
+        throw const AuthException(
+          'user-not-found',
+          'Current user not found.',
+        );
       }
 
-      final List<Map<String, dynamic>> users = <Map<String, dynamic>>[];
-      for (final dynamic item in decoded) {
-        if (item is! Map) {
-          continue;
-        }
-
-        final Map<String, dynamic> map = Map<String, dynamic>.from(item);
-        final String uid = map['uid']?.toString() ?? '';
-        final String email = map['email']?.toString() ?? '';
-        final String password = map['password']?.toString() ?? '';
-        if (uid.isEmpty || email.isEmpty || password.isEmpty) {
-          continue;
-        }
-
-        users.add(<String, dynamic>{
-          'uid': uid,
-          'name': map['name']?.toString() ?? '',
-          'email': email,
-          'password': password,
-          'avatarUrl': map['avatarUrl']?.toString(),
-        });
-      }
-
-      return users;
-    } catch (_) {
-      return <Map<String, dynamic>>[];
+      await currentUser.updateDisplayName(name.trim());
+      await currentUser.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code, e.message ?? 'An error occurred');
+    } catch (e) {
+      throw AuthException(
+        'unknown-error',
+        'Failed to update display name: $e',
+      );
     }
-  }
-
-  Future<void> _writeUsers(List<Map<String, dynamic>> users) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_usersKey, jsonEncode(users));
-  }
-
-  Future<void> _saveSession(String uid) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_sessionUidKey, uid);
-  }
-
-  String _generateUid() {
-    final Random random = Random();
-    final int now = DateTime.now().millisecondsSinceEpoch;
-    final int rand = random.nextInt(1 << 32);
-    return 'cv_${now}_$rand';
-  }
-
-  AppUser _toAppUser(Map<String, dynamic> record) {
-    final String uid = record['uid']?.toString() ?? '';
-    final String name = record['name']?.toString() ?? '';
-    final String email = record['email']?.toString() ?? '';
-    final String? avatarUrl = record['avatarUrl']?.toString();
-
-    return AppUser(
-      uid: uid,
-      name: name,
-      email: email,
-      avatarUrl: avatarUrl,
-    );
   }
 }

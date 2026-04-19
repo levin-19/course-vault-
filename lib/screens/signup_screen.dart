@@ -51,15 +51,13 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  /// Handle email change to detect university
+  /// Handle email change to validate email format
   void _onEmailChanged(String email) {
     setState(() {
-      final university = UniversityHelper.getUniversityFromEmail(email);
-      _detectedUniversity = university;
-      // Reset department when university changes
-      if (_selectedDepartment != null &&
-          (university == null ||
-              !university.departments.contains(_selectedDepartment))) {
+      // Check if email format is valid
+      if (FormValidators.validateEmail(email) != null) {
+        // Clear selections if email format is invalid
+        _detectedUniversity = null;
         _selectedDepartment = null;
       }
     });
@@ -119,7 +117,7 @@ class _SignupScreenState extends State<SignupScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-              boxShadow: [AppTheme.shadowLarge],
+              boxShadow: const [AppTheme.shadowLarge],
             ),
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -204,7 +202,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppTheme.spacingM),
-                      Text(
+                      const Text(
                         'Start managing your academic life today',
                         style: TextStyle(
                           fontSize: 14,
@@ -253,7 +251,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacingM),
 
-                      // University Detection Message
+                      // University Detection Message (optional - only shown if valid email and university found)
                       if (_detectedUniversity != null)
                         Container(
                           padding: const EdgeInsets.all(AppTheme.spacingM),
@@ -280,40 +278,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.info,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else if (_emailController.text.isNotEmpty &&
-                          !UniversityHelper.isUniversityEmailValid(
-                              _emailController.text))
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spacingM),
-                          decoration: BoxDecoration(
-                            color: AppColors.errorLight,
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMedium),
-                            border: Border.all(
-                              color: AppColors.error.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.warning_outlined,
-                                color: AppColors.error,
-                                size: 18,
-                              ),
-                              const SizedBox(width: AppTheme.spacingM),
-                              const Expanded(
-                                child: Text(
-                                  'Please use a supported university email',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.error,
                                   ),
                                 ),
                               ),
@@ -416,20 +380,20 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: AppTheme.spacingL),
 
                       // Divider
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
                           vertical: AppTheme.spacingM,
                         ),
                         child: Row(
                           children: [
-                            const Expanded(
+                            Expanded(
                               child: Divider(
                                 color: AppColors.borderLight,
                                 thickness: 1,
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                 horizontal: AppTheme.spacingM,
                               ),
                               child: Text(
@@ -441,7 +405,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                               ),
                             ),
-                            const Expanded(
+                            Expanded(
                               child: Divider(
                                 color: AppColors.borderLight,
                                 thickness: 1,

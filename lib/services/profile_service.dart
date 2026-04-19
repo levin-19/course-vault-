@@ -1,26 +1,40 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/app_user.dart';
 
 class ProfileService {
-  static const String _profilesKey = 'cv_profiles';
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _usersCollection = 'users';
 
   Future<void> createUserProfile(AppUser user) async {
-    final Map<String, dynamic> profiles = await _readProfiles();
-    profiles[user.uid] = user.toMap();
-    await _writeProfiles(profiles);
+    try {
+      await _firestore.collection(_usersCollection).doc(user.uid).set(
+            user.toMap(),
+            SetOptions(merge: true),
+          );
+    } catch (e) {
+      throw Exception('Failed to create user profile: $e');
+    }
   }
 
   Future<AppUser?> fetchUserProfile(String uid) async {
-    final Map<String, dynamic> profiles = await _readProfiles();
-    final dynamic value = profiles[uid];
-    if (value == null) {
-      return null;
-    }
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> doc =
+          await _firestore.collection(_usersCollection).doc(uid).get();
 
-    return AppUser.fromMap(Map<String, dynamic>.from(value as Map));
+      if (!doc.exists) {
+        return null;
+      }
+
+      final Map<String, dynamic>? data = doc.data();
+      if (data == null) {
+        return null;
+      }
+
+      return AppUser.fromMap(data);
+    } catch (e) {
+      throw Exception('Failed to fetch user profile: $e');
+    }
   }
 
   Future<void> updateUserProfile({
@@ -28,35 +42,23 @@ class ProfileService {
     String? name,
     String? avatarUrl,
   }) async {
-    final Map<String, dynamic> profiles = await _readProfiles();
-    final Map<String, dynamic> existing = Map<String, dynamic>.from(
-      (profiles[uid] as Map?) ?? <String, dynamic>{'uid': uid},
-    );
+    try {
+      final Map<String, dynamic> updateData = <String, dynamic>{};
 
-    if (name != null) {
-      existing['name'] = name;
+      if (name != null) {
+        updateData['name'] = name;
+      }
+      if (avatarUrl != null) {
+        updateData['avatarUrl'] = avatarUrl;
+      }
+
+      if (updateData.isEmpty) {
+        return;
+      }
+
+      await _firestore.collection(_usersCollection).doc(uid).update(updateData);
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
     }
-    if (avatarUrl != null) {
-      existing['avatarUrl'] = avatarUrl;
-    }
-
-    profiles[uid] = existing;
-    await _writeProfiles(profiles);
-  }
-
-  Future<Map<String, dynamic>> _readProfiles() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? raw = prefs.getString(_profilesKey);
-
-    if (raw == null || raw.isEmpty) {
-      return <String, dynamic>{};
-    }
-
-    return Map<String, dynamic>.from(jsonDecode(raw) as Map);
-  }
-
-  Future<void> _writeProfiles(Map<String, dynamic> profiles) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_profilesKey, jsonEncode(profiles));
   }
 }
