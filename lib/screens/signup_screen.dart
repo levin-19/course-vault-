@@ -1,535 +1,446 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'package:get/get.dart';
 import '../config/app_colors.dart';
-import '../config/constants.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../utils/validators.dart';
-import '../widgets/checkbox_field.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/dropdown_field.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/social_auth_button.dart';
-import 'login_screen.dart';
-import 'profile_screen.dart';
+import '../controllers/signup_controller.dart';
 
-/// Modern Registration Screen with student-specific features
-/// Enhanced with university email, student ID, department, and semester selection
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
 
-  static const String routeName = '/signup';
-
-  @override
-  State<SignupScreen> createState() => _SignupScreenState();
-}
-
-class _SignupScreenState extends State<SignupScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _studentIdController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
-  String? _selectedDepartment;
-  String? _selectedSemester;
-  bool _acceptTerms = false;
-  PasswordStrength _passwordStrength = PasswordStrength.empty;
-  UniversityData? _detectedUniversity;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _studentIdController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  /// Handle email change to validate email format
-  void _onEmailChanged(String email) {
-    setState(() {
-      // Check if email format is valid
-      if (FormValidators.validateEmail(email) != null) {
-        // Clear selections if email format is invalid
-        _detectedUniversity = null;
-        _selectedDepartment = null;
-      }
-    });
-  }
-
-  /// Handle password change to update strength indicator
-  void _onPasswordChanged(String password) {
-    setState(() {
-      _passwordStrength = FormValidators.getPasswordStrength(password);
-    });
-  }
-
-  Future<void> _signUp() async {
-    final AuthProvider authProvider = context.read<AuthProvider>();
-
-    if (!_formKey.currentState!.validate()) return;
-
-    final bool success = await authProvider.signUp(
-      name: _nameController.text,
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      // Show success animation/message
-      _showSuccessAnimation();
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, ProfileScreen.routeName);
-        }
-      });
-      return;
-    }
-
-    final String message = authProvider.errorMessage ?? 'Sign up failed.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  /// Show success animation
-  void _showSuccessAnimation() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Center(
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-              boxShadow: const [AppTheme.shadowLarge],
-            ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 60,
-                  color: AppColors.success,
-                ),
-                SizedBox(height: AppTheme.spacingM),
-                Text(
-                  'Success!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _handleGoogleAuth() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Google Sign-Up coming soon!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+  static const routeName = '/signup';
 
   @override
   Widget build(BuildContext context) {
-    final AuthProvider authProvider = context.watch<AuthProvider>();
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
-    final departments = _detectedUniversity?.departments ?? [];
+    final controller = Get.put(SignupController());
+    final isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Account'),
+        centerTitle: true,
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        foregroundColor: isDarkMode ? Colors.white : Colors.black,
         elevation: 0,
-        backgroundColor: AppColors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: SingleChildScrollView(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.backgroundColor,
-                AppColors.backgroundColor.withOpacity(0.8),
-              ],
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section 1: Personal Information
+            Text(
+              'Personal Information',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal:
-                    isSmallScreen ? AppTheme.spacingL : AppTheme.spacingXXL,
-                vertical: AppTheme.spacingXL,
+            const SizedBox(height: 16),
+
+            // Full Name
+            TextField(
+              controller: controller.fullNameController,
+              decoration: InputDecoration(
+                hintText: 'Full Name',
+                prefixIcon: const Icon(Icons.person_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
               ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      // Header
-                      Text(
-                        'Join CourseVault',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppTheme.spacingM),
-                      const Text(
-                        'Start managing your academic life today',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.25,
+            ),
+            const SizedBox(height: 12),
+
+            // Student ID
+            TextField(
+              controller: controller.studentIdController,
+              decoration: InputDecoration(
+                hintText: 'Student ID',
+                prefixIcon: const Icon(Icons.badge_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Email
+            TextField(
+              controller: controller.emailController,
+              decoration: InputDecoration(
+                hintText: 'University Email',
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Phone
+            TextField(
+              controller: controller.phoneController,
+              decoration: InputDecoration(
+                hintText: 'Phone Number',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Section 2: Academic Information
+            Text(
+              'Academic Information',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Department Dropdown
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: controller.selectedDepartment.value,
+                decoration: InputDecoration(
+                  hintText: 'Select Department',
+                  prefixIcon: const Icon(Icons.school_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                ),
+                items: controller.departments
+                    .map((dept) => DropdownMenuItem(
+                          value: dept,
+                          child: Text(dept),
+                        ))
+                    .toList(),
+                onChanged: (value) => controller.selectedDepartment(value),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Program Type Dropdown
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: controller.selectedProgramType.value,
+                decoration: InputDecoration(
+                  hintText: 'Select Program Type',
+                  prefixIcon: const Icon(Icons.school),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                ),
+                items: controller.programTypes
+                    .map((program) => DropdownMenuItem(
+                          value: program,
+                          child: Text(program),
+                        ))
+                    .toList(),
+                onChanged: controller.onProgramTypeChanged,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Semester Dropdown
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: controller.selectedSemester.value,
+                decoration: InputDecoration(
+                  hintText: 'Select Semester',
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: controller.selectedProgramType.value == null
+                      ? Colors.grey[300]
+                      : (isDarkMode ? Colors.grey[800] : Colors.grey[100]),
+                ),
+                items: controller.getAvailableSemesters()
+                    .map((sem) => DropdownMenuItem(
+                          value: sem,
+                          child: Text('Semester $sem'),
+                        ))
+                    .toList(),
+                onChanged: controller.selectedProgramType.value == null
+                    ? null
+                    : (value) => controller.selectedSemester(value),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Batch
+            Obx(
+              () => DropdownButtonFormField<String>(
+                value: controller.selectedBatch.value,
+                decoration: InputDecoration(
+                  hintText: 'Select Batch',
+                  prefixIcon: const Icon(Icons.date_range),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                ),
+                items: controller.batches
+                    .map((batch) => DropdownMenuItem(
+                          value: batch,
+                          child: Text(batch),
+                        ))
+                    .toList(),
+                onChanged: (value) => controller.selectedBatch(value),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // CGPA (Optional)
+            TextField(
+              controller: controller.cgpaController,
+              decoration: InputDecoration(
+                hintText: 'CGPA (Optional)',
+                prefixIcon: const Icon(Icons.grade_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 24),
+
+            // Section 3: Security
+            Text(
+              'Security',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Password with Strength Indicator
+            Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: controller.passwordController,
+                    obscureText: !controller.isPasswordVisible.value,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.isPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
-                        textAlign: TextAlign.center,
+                        onPressed: controller.togglePasswordVisibility,
                       ),
-                      const SizedBox(height: AppTheme.spacingXXL),
-
-                      // Full Name
-                      CustomTextField(
-                        label: 'Full Name',
-                        controller: _nameController,
-                        keyboardType: TextInputType.name,
-                        textInputAction: TextInputAction.next,
-                        prefixIcon: Icons.person_outline,
-                        hint: 'John Doe',
-                        validator: FormValidators.validateFullName,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: AppTheme.spacingL),
+                      filled: true,
+                      fillColor:
+                          isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Password Strength Indicator
+                  LinearProgressIndicator(
+                    value: controller.passwordStrength.value / 5,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      controller.passwordStrength.value < 2
+                          ? Colors.red
+                          : controller.passwordStrength.value < 4
+                              ? Colors.orange
+                              : Colors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Password Strength: ${_getPasswordStrengthText(controller.passwordStrength.value)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
-                      // Student ID
-                      CustomTextField(
-                        label: 'Student ID',
-                        controller: _studentIdController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.next,
-                        prefixIcon: Icons.badge_outlined,
-                        hint: '12345678',
-                        validator: FormValidators.validateStudentId,
+            // Confirm Password with Mismatch Detection
+            Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: controller.confirmPasswordController,
+                    obscureText: !controller.isConfirmPasswordVisible.value,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm Password',
+                      prefixIcon: const Icon(Icons.lock_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.isConfirmPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed:
+                            controller.toggleConfirmPasswordVisibility,
                       ),
-                      const SizedBox(height: AppTheme.spacingL),
-
-                      // Email
-                      CustomTextField(
-                        label: 'Email Address',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        prefixIcon: Icons.email_outlined,
-                        hint: 'your.email@example.com',
-                        validator: FormValidators.validateEmail,
-                        onChanged: _onEmailChanged,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: controller.showPasswordMismatch.value
+                              ? Colors.red
+                              : Colors.grey,
+                        ),
                       ),
-                      const SizedBox(height: AppTheme.spacingM),
+                      filled: true,
+                      fillColor:
+                          isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    ),
+                  ),
+                  if (controller.showPasswordMismatch.value)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline,
+                              size: 16, color: Colors.red),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Passwords do not match',
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
-                      // University Detection Message (optional - only shown if valid email and university found)
-                      if (_detectedUniversity != null)
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spacingM),
-                          decoration: BoxDecoration(
-                            color: AppColors.infoLight,
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMedium),
-                            border: Border.all(
-                              color: AppColors.info.withOpacity(0.3),
+            // Terms & Conditions Checkbox
+            Obx(
+              () => Row(
+                children: [
+                  Checkbox(
+                    value: controller.acceptTerms.value,
+                    onChanged: (_) => controller.toggleAcceptTerms(),
+                    activeColor: const Color(0xFF1F6FEB),
+                  ),
+                  Expanded(
+                    child: RichText(
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'I agree to the ',
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                          TextSpan(
+                            text: 'Terms & Conditions',
+                            style: TextStyle(
+                              color: Color(0xFF1F6FEB),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                color: AppColors.info,
-                                size: 18,
-                              ),
-                              const SizedBox(width: AppTheme.spacingM),
-                              Expanded(
-                                child: Text(
-                                  'Detected: ${_detectedUniversity!.name}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.info,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: AppTheme.spacingL),
-
-                      // Department Dropdown (only show if university detected)
-                      if (_detectedUniversity != null)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomDropdownField<String>(
-                              label: 'Department',
-                              items: departments,
-                              hint: 'Select your department',
-                              value: _selectedDepartment,
-                              prefixIcon: Icons.business_outlined,
-                              onChanged: (value) {
-                                setState(() => _selectedDepartment = value);
-                              },
-                              validator: (value) =>
-                                  FormValidators.validateDropdown(
-                                value,
-                                'department',
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spacingL),
-                          ],
-                        ),
-
-                      // Semester Dropdown
-                      CustomDropdownField<String>(
-                        label: 'Current Semester',
-                        items: AppConstants.semesters,
-                        hint: 'Select semester',
-                        value: _selectedSemester,
-                        prefixIcon: Icons.calendar_month_outlined,
-                        onChanged: (value) {
-                          setState(() => _selectedSemester = value);
-                        },
-                        validator: (value) =>
-                            FormValidators.validateDropdown(value, 'semester'),
+                        ],
                       ),
-                      const SizedBox(height: AppTheme.spacingL),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
 
-                      // Password Field
-                      CustomTextField(
-                        label: 'Password',
-                        controller: _passwordController,
-                        obscureText: true,
-                        textInputAction: TextInputAction.next,
-                        prefixIcon: Icons.lock_outlined,
-                        hint: 'At least 8 characters',
-                        validator: FormValidators.validatePassword,
-                        onChanged: _onPasswordChanged,
-                      ),
-                      const SizedBox(height: AppTheme.spacingM),
-
-                      // Password Strength Indicator
-                      if (_passwordStrength != PasswordStrength.empty)
-                        _buildPasswordStrengthIndicator(),
-                      const SizedBox(height: AppTheme.spacingL),
-
-                      // Confirm Password
-                      CustomTextField(
-                        label: 'Confirm Password',
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        textInputAction: TextInputAction.done,
-                        prefixIcon: Icons.lock_outlined,
-                        validator: (value) =>
-                            FormValidators.validatePasswordMatch(
-                          _passwordController.text,
-                          value,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacingXL),
-
-                      // Terms & Conditions Checkbox
-                      CustomCheckboxField(
-                        label: 'I agree to the',
-                        link: 'Terms & Conditions',
-                        value: _acceptTerms,
-                        onChanged: (value) {
-                          setState(() => _acceptTerms = value ?? false);
-                        },
-                        validator: (value) =>
-                            FormValidators.validateCheckbox(value, 'terms'),
-                      ),
-                      const SizedBox(height: AppTheme.spacingXXL),
-
-                      // Sign Up Button
-                      PrimaryButton(
-                        label: 'Create Account',
-                        isLoading: authProvider.isLoading,
-                        onPressed: _signUp,
-                      ),
-                      const SizedBox(height: AppTheme.spacingL),
-
-                      // Divider
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: AppTheme.spacingM,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                color: AppColors.borderLight,
-                                thickness: 1,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacingM,
-                              ),
-                              child: Text(
-                                'Or',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                color: AppColors.borderLight,
-                                thickness: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacingL),
-
-                      // Google Sign Up
-                      SocialAuthButton(
-                        label: 'Sign up with Google',
-                        icon: Icons.search,
-                        onPressed: _handleGoogleAuth,
-                      ),
-                      const SizedBox(height: AppTheme.spacingXXL),
-
-                      // Login Link
-                      Center(
-                        child: RichText(
-                          text: TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: 'Already have an account? ',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              TextSpan(
-                                text: 'Sign In',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      LoginScreen.routeName,
-                                    );
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacingXL),
-                    ],
+            // Sign Up Button
+            Obx(
+              () => ElevatedButton(
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () => controller.signup(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F6FEB),
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Create Account',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+
+            // Login Link
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Already have an account? '),
+                GestureDetector(
+                  onTap: () => Get.toNamed('/login'),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                      color: Color(0xFF1F6FEB),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 
-  /// Build password strength indicator widget
-  Widget _buildPasswordStrengthIndicator() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Password Strength',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            Text(
-              _passwordStrength.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _getPasswordStrengthColor(),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-          child: Stack(
-            children: [
-              Container(
-                height: 4,
-                color: AppColors.lightGrey,
-              ),
-              Container(
-                height: 4,
-                width: MediaQuery.of(context).size.width *
-                    (_passwordStrength.percentFilled / 100),
-                color: _getPasswordStrengthColor(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Get color based on password strength
-  Color _getPasswordStrengthColor() {
-    switch (_passwordStrength) {
-      case PasswordStrength.weak:
-        return AppColors.error;
-      case PasswordStrength.fair:
-        return AppColors.warning;
-      case PasswordStrength.good:
-        return Colors.amber;
-      case PasswordStrength.strong:
-        return AppColors.success;
+  String _getPasswordStrengthText(int strength) {
+    switch (strength) {
+      case 0:
+      case 1:
+        return 'Weak';
+      case 2:
+      case 3:
+        return 'Medium';
+      case 4:
+      case 5:
+        return 'Strong';
       default:
-        return AppColors.textHint;
+        return 'Unknown';
     }
   }
 }

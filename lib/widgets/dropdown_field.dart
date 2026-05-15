@@ -14,6 +14,7 @@ class CustomDropdownField<T> extends StatefulWidget {
     this.validator,
     this.prefixIcon,
     this.itemLabelBuilder,
+    this.enabled = true,
   });
 
   final String label;
@@ -24,6 +25,7 @@ class CustomDropdownField<T> extends StatefulWidget {
   final String? Function(T?)? validator;
   final IconData? prefixIcon;
   final String Function(T)? itemLabelBuilder;
+  final bool enabled;
 
   @override
   State<CustomDropdownField<T>> createState() => _CustomDropdownFieldState<T>();
@@ -45,7 +47,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     return Focus(
       onFocusChange: (isFocused) {
         setState(() {
-          _isFocused = isFocused;
+          _isFocused = isFocused && widget.enabled;
         });
       },
       child: Column(
@@ -54,11 +56,13 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
           Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: validationError != null
-                    ? AppColors.error
-                    : _isFocused
-                        ? AppColors.primary
-                        : AppColors.borderLight,
+                color: !widget.enabled
+                    ? AppColors.borderLight.withOpacity(0.5)
+                    : validationError != null
+                        ? AppColors.error
+                        : _isFocused
+                            ? AppColors.primary
+                            : AppColors.borderLight,
                 width: validationError != null
                     ? 1.5
                     : _isFocused
@@ -66,12 +70,24 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                         : 1.5,
               ),
               borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              color: AppColors.white,
+              color: !widget.enabled
+                  ? AppColors.lightGrey.withOpacity(0.3)
+                  : AppColors.white,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 isExpanded: true,
                 value: widget.value,
+                disabledHint: Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Text(
+                    widget.hint,
+                    style: const TextStyle(
+                      color: AppColors.textHint,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
                 hint: Padding(
                   padding: const EdgeInsets.only(left: 12),
                   child: Text(
@@ -82,7 +98,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                     ),
                   ),
                 ),
-                onChanged: widget.onChanged,
+                onChanged: widget.enabled ? widget.onChanged : null,
                 items: widget.items.map((T item) {
                   final itemLabel =
                       widget.itemLabelBuilder?.call(item) ?? item.toString();
@@ -105,9 +121,11 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   padding: const EdgeInsets.only(right: 12),
                   child: Icon(
                     Icons.expand_more,
-                    color: _isFocused
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                    color: !widget.enabled
+                        ? AppColors.textHint
+                        : _isFocused
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(

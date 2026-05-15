@@ -97,6 +97,58 @@ class FormValidators {
     return null;
   }
 
+  // ============ Phone Validation ============
+  static String? validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+
+    final String phone = value.trim();
+    final bool isValid = RegExp(r'^[+]?[0-9]{10,15}$').hasMatch(phone);
+
+    if (!isValid) {
+      return 'Please enter a valid phone number';
+    }
+
+    return null;
+  }
+
+  // ============ Batch Validation ============
+  static String? validateBatch(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Batch is required';
+    }
+
+    final String batch = value.trim();
+    final bool isValid = RegExp(r'^[0-9]{4}-[0-9]{4}$').hasMatch(batch);
+
+    if (!isValid) {
+      return 'Batch should be in format: 2022-2026';
+    }
+
+    return null;
+  }
+
+  // ============ CGPA Validation ============
+  static String? validateCGPA(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // CGPA is optional
+    }
+
+    final String cgpa = value.trim();
+    final double? cgpaValue = double.tryParse(cgpa);
+
+    if (cgpaValue == null) {
+      return 'Please enter a valid CGPA';
+    }
+
+    if (cgpaValue < 0 || cgpaValue > 4.0) {
+      return 'CGPA must be between 0 and 4.0';
+    }
+
+    return null;
+  }
+
   // ============ Checkbox Validation ============
   static String? validateCheckbox(bool? value, String fieldName) {
     if (value != true) {
