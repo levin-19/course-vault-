@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../config/app_colors.dart';
 import '../controllers/login_controller.dart';
 
 class LoginScreen extends StatelessWidget {

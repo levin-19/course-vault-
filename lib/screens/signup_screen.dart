@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../config/app_colors.dart';
 import '../controllers/signup_controller.dart';
 
 class SignupScreen extends StatelessWidget {
@@ -108,7 +107,7 @@ class SignupScreen extends StatelessWidget {
             // Department Dropdown
             Obx(
               () => DropdownButtonFormField<String>(
-                value: controller.selectedDepartment.value,
+                initialValue: controller.selectedDepartment.value,
                 decoration: InputDecoration(
                   hintText: 'Select Department',
                   prefixIcon: const Icon(Icons.school_outlined),
@@ -132,7 +131,7 @@ class SignupScreen extends StatelessWidget {
             // Program Type Dropdown
             Obx(
               () => DropdownButtonFormField<String>(
-                value: controller.selectedProgramType.value,
+                initialValue: controller.selectedProgramType.value,
                 decoration: InputDecoration(
                   hintText: 'Select Program Type',
                   prefixIcon: const Icon(Icons.school),
@@ -156,7 +155,7 @@ class SignupScreen extends StatelessWidget {
             // Semester Dropdown
             Obx(
               () => DropdownButtonFormField<String>(
-                value: controller.selectedSemester.value,
+                initialValue: controller.selectedSemester.value,
                 decoration: InputDecoration(
                   hintText: 'Select Semester',
                   prefixIcon: const Icon(Icons.calendar_today),
@@ -184,7 +183,7 @@ class SignupScreen extends StatelessWidget {
             // Batch
             Obx(
               () => DropdownButtonFormField<String>(
-                value: controller.selectedBatch.value,
+                initialValue: controller.selectedBatch.value,
                 decoration: InputDecoration(
                   hintText: 'Select Batch',
                   prefixIcon: const Icon(Icons.date_range),
@@ -317,13 +316,13 @@ class SignupScreen extends StatelessWidget {
                     ),
                   ),
                   if (controller.showPasswordMismatch.value)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline,
+                          Icon(Icons.error_outline,
                               size: 16, color: Colors.red),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             'Passwords do not match',
                             style: TextStyle(color: Colors.red, fontSize: 12),
