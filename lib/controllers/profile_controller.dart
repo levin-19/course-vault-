@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/user_service.dart';
+import '../services/database_service.dart';
 
 class ProfileController extends GetxController {
   // Reactive variables
@@ -56,23 +57,76 @@ class ProfileController extends GetxController {
     loadProfileData();
   }
 
-  // Load profile data from UserService
+  @override
+  void onReady() {
+    super.onReady();
+    // Reload data when screen comes into view
+    loadProfileData();
+  }
+
+  // Load profile data from Firebase
   Future<void> loadProfileData() async {
     try {
       isLoading(true);
-      // Get user data from UserService
+      // Get current user ID from UserService
       final userService = UserService.to;
-      final userData = userService.getUserData();
+      final userId = userService.currentUserId.value;
       
-      // Update userProfile with data from UserService
-      userProfile(userData);
+      if (userId.isEmpty) {
+        Get.snackbar('Error', 'User not logged in',
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      
+      // Fetch user data from Firestore
+      final databaseService = DatabaseService.to;
+      var userData = await databaseService.getUserProfile(userId);
+      
+      // If profile doesn't exist, show message
+      if (userData == null) {
+        Get.snackbar('Info', 'Please complete your profile by signing up',
+            snackPosition: SnackPosition.BOTTOM);
+        // Initialize with empty profile
+        userData = {
+          'fullName': '',
+          'email': userService.currentUserEmail.value,
+          'studentId': '',
+          'university': 'FAST University',
+          'department': '',
+          'programType': '',
+          'semester': '',
+          'batch': '',
+          'phone': '',
+          'cgpa': 0.0,
+          'joinDate': DateTime.now().toString().split(' ')[0],
+          'profileImageUrl': null,
+        };
+      }
+      
+      // Update userProfile with data from Firestore
+      Map<String, dynamic> profileData = {
+        'fullName': userData['fullName'] ?? '',
+        'email': userData['email'] ?? '',
+        'studentId': userData['studentId'] ?? '',
+        'university': userData['university'] ?? 'FAST University',
+        'department': userData['department'] ?? '',
+        'programType': userData['programType'] ?? '',
+        'semester': userData['semester'] ?? '',
+        'batch': userData['batch'] ?? '',
+        'phone': userData['phone'] ?? '',
+        'cgpa': userData['cgpa'] ?? 0.0,
+        'joinDate': userData['joinDate'] ?? DateTime.now().toString().split(' ')[0],
+        'profileImageUrl': userData['profileImageUrl'],
+      };
+      
+      userProfile(profileData);
       
       // Initialize controllers with profile data
-      fullNameController.text = userData['fullName']?.toString() ?? '';
-      emailController.text = userData['email']?.toString() ?? '';
-      studentIdController.text = userData['studentId']?.toString() ?? '';
-      phoneController.text = userData['phone']?.toString() ?? '';
-      cgpaController.text = userData['cgpa']?.toString() ?? '';
+      fullNameController.text = profileData['fullName']?.toString() ?? '';
+      emailController.text = profileData['email']?.toString() ?? '';
+      studentIdController.text = profileData['studentId']?.toString() ?? '';
+      phoneController.text = profileData['phone']?.toString() ?? '';
+      cgpaController.text = profileData['cgpa']?.toString() ?? '';
     } catch (e) {
       Get.snackbar('Error', 'Failed to load profile: $e',
           snackPosition: SnackPosition.BOTTOM);
@@ -93,26 +147,41 @@ class ProfileController extends GetxController {
       // Simulate API call
       await Future.delayed(const Duration(milliseconds: 500));
       
-      // Create a new map with updated values
-      final updatedProfile = {
-        ...userProfile.value,
+      // Get current user ID
+      final userService = UserService.to;
+      final userId = userService.currentUserId.value;
+      
+      if (userId.isEmpty) {
+        Get.snackbar('Error', 'User not logged in',
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      
+      // Create updated profile map
+      Map<String, dynamic> updatedProfile = Map.from(userProfile);
+      updatedProfile.addAll({
         'fullName': fullNameController.text,
         'email': emailController.text,
         'studentId': studentIdController.text,
         'phone': phoneController.text,
         'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
-      };
+      });
       
-      // Reassign the entire map to trigger reactivity
+      // Save to Firestore
+      final databaseService = DatabaseService.to;
+      await databaseService.updateUserProfile(
+        userId: userId,
+        updates: {
+          'fullName': fullNameController.text,
+          'email': emailController.text,
+          'studentId': studentIdController.text,
+          'phone': phoneController.text,
+          'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
+        },
+      );
+      
+      // Update local state
       userProfile(updatedProfile);
-      
-      // Also update UserService
-      final userService = UserService.to;
-      userService.updateField('fullName', fullNameController.text);
-      userService.updateField('email', emailController.text);
-      userService.updateField('studentId', studentIdController.text);
-      userService.updateField('phone', phoneController.text);
-      userService.updateField('cgpa', double.tryParse(cgpaController.text) ?? 0.0);
       
       isEditing(false);
       Get.snackbar('Success', 'Profile updated successfully',
@@ -160,9 +229,9 @@ class ProfileController extends GetxController {
       // Simulate logout
       await Future.delayed(const Duration(milliseconds: 500));
       
-      // Clear user data from UserService
+      // Clear user session from UserService
       final userService = UserService.to;
-      userService.clearUserData();
+      userService.logout();
       
       Get.offAllNamed('/login');
       Get.snackbar('Success', 'Logged out successfully',

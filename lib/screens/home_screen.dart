@@ -99,7 +99,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Ahmed Sarim',
+                  'Solaiman',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -108,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Computer Science • Semester 6',
+                  'Computer Science • Semester 9',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 12,

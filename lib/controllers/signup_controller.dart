@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/user_service.dart';
+import '../services/database_service.dart';
 
 class SignupController extends GetxController {
   // Form controllers
@@ -148,9 +149,14 @@ class SignupController extends GetxController {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
 
-      // Save user data to UserService
-      final userService = UserService.to;
-      userService.saveUserData(
+      // Use email as userId (simple approach)
+      final userId = emailController.text;
+      final cgpaValue = double.tryParse(cgpaController.text) ?? 0.0;
+
+      // Save user data to Firestore
+      final databaseService = DatabaseService.to;
+      await databaseService.saveUserProfile(
+        userId: userId,
         fullName: fullNameController.text,
         email: emailController.text,
         studentId: studentIdController.text,
@@ -159,8 +165,14 @@ class SignupController extends GetxController {
         programType: selectedProgramType.value ?? '',
         semester: selectedSemester.value ?? '',
         batch: selectedBatch.value ?? '',
-        cgpa: double.tryParse(cgpaController.text) ?? 0.0,
+        cgpa: cgpaValue,
+        password: passwordController.text,
       );
+
+      // Set current user session in UserService
+      final userService = UserService.to;
+      userService.setCurrentUserId(userId);
+      userService.setCurrentUser(emailController.text);
 
       // Navigate to home screen
       Get.offAllNamed('/home');

@@ -10,6 +10,7 @@ import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'services/user_service.dart';
+import 'services/database_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +18,9 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // Initialize UserService
+  // Initialize UserService and DatabaseService
   Get.put(UserService());
+  Get.put(DatabaseService());
 
   runApp(const CourseVaultApp());
 }

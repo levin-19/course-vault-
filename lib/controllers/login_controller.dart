@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../services/user_service.dart';
+import '../services/database_service.dart';
 
 class LoginController extends GetxController {
   // Reactive variables
@@ -14,9 +16,9 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Pre-fill with demo credentials
-    emailController.text = 'ss@gmail.com';
-    passwordController.text = 'demo123';
+    // Empty fields - user must enter credentials (no demo pre-fill)
+    emailController.text = '';
+    passwordController.text = '';
   }
 
   // Toggle password visibility
@@ -34,8 +36,25 @@ class LoginController extends GetxController {
 
     try {
       isLoading(true);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      
+      final databaseService = DatabaseService.to;
+      final userService = UserService.to;
+      
+      // Validate credentials against Firestore
+      final isValidUser = await databaseService.validateCredentials(
+        emailController.text,
+        passwordController.text,
+      );
+
+      if (!isValidUser) {
+        Get.snackbar('Error', 'Invalid email or password. Please sign up first.',
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+
+      // Credentials are valid, set user session
+      userService.setCurrentUserId(emailController.text);
+      userService.setCurrentUser(emailController.text);
 
       // Navigate to home screen
       Get.offAllNamed('/home');
