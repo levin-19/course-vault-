@@ -10,15 +10,13 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(LoginController());
-    final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          color: isDarkMode ? Colors.grey[900] : Colors.white,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -35,7 +33,7 @@ class LoginScreen extends StatelessWidget {
               Text(
                 'Welcome Back',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      color: Colors.grey[600],
                     ),
               ),
               const SizedBox(height: 48),
@@ -50,8 +48,7 @@ class LoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor:
-                      isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                  fillColor: Colors.grey[100],
                 ),
               ),
               const SizedBox(height: 16),
@@ -76,8 +73,7 @@ class LoginScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor:
-                        isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    fillColor: Colors.grey[100],
                   ),
                 ),
               ),
