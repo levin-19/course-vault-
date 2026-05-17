@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
@@ -29,6 +31,109 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Profile Header Card
+                    Obx(() {
+                      final localPath = controller.profileImagePath.value;
+                      final remoteUrl =
+                          controller.userProfile['profileImageUrl']?.toString();
+                      final name =
+                          controller.userProfile['fullName']?.toString() ?? '';
+                      final studentId =
+                          controller.userProfile['studentId']?.toString() ?? '';
+
+                      ImageProvider? avatarImage;
+                      if (localPath != null && !kIsWeb) {
+                        avatarImage = FileImage(File(localPath));
+                      } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
+                        avatarImage = NetworkImage(remoteUrl);
+                      }
+
+                      return Center(
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 56,
+                                  backgroundColor: isDarkMode
+                                      ? Colors.grey[700]
+                                      : Colors.grey[200],
+                                  backgroundImage: avatarImage,
+                                  child: avatarImage == null
+                                      ? Icon(
+                                          Icons.person,
+                                          size: 56,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[500],
+                                        )
+                                      : null,
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: controller.pickProfileImage,
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1F6FEB),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white, width: 2),
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              name.isNotEmpty ? name : 'Your Name',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            if (studentId.isNotEmpty) ...
+                              [
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Student ID: $studentId',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            if (localPath != null) ...
+                              [
+                                const SizedBox(height: 6),
+                                TextButton.icon(
+                                  onPressed: () => controller.saveProfile(),
+                                  icon: const Icon(Icons.save,
+                                      size: 16,
+                                      color: Color(0xFF1F6FEB)),
+                                  label: const Text(
+                                    'Save new photo',
+                                    style: TextStyle(
+                                        color: Color(0xFF1F6FEB),
+                                        fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+
                     // Edit/Save/Cancel Actions
                     Obx(
                       () => Row(

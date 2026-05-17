@@ -19,9 +19,10 @@ class DatabaseService extends GetxService {
     required String batch,
     required double cgpa,
     required String password,
+    String? profileImagePath, // optional
   }) async {
     try {
-      await _firestore.collection('users').doc(userId).set({
+      final data = <String, dynamic>{
         'fullName': fullName,
         'email': email,
         'studentId': studentId,
@@ -36,7 +37,11 @@ class DatabaseService extends GetxService {
         'joinDate': DateTime.now().toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (profileImagePath != null) {
+        data['profileImageUrl'] = profileImagePath;
+      }
+      await _firestore.collection('users').doc(userId).set(data);
     } catch (e) {
       throw Exception('Failed to save user profile: $e');
     }

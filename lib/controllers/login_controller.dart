@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../services/user_service.dart';
-import '../services/database_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginController extends GetxController {
   // Reactive variables
@@ -30,40 +29,48 @@ class LoginController extends GetxController {
   Future<void> login() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Get.snackbar('Error', 'Please fill all fields',
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
       return;
     }
 
     try {
       isLoading(true);
       
-      final databaseService = DatabaseService.to;
-      final userService = UserService.to;
-      
-      // Validate credentials against Firestore
-      final isValidUser = await databaseService.validateCredentials(
-        emailController.text,
-        passwordController.text,
+      // Sign in with Firebase Authentication
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text,
       );
-
-      if (!isValidUser) {
-        Get.snackbar('Error', 'Invalid email or password. Please sign up first.',
-            snackPosition: SnackPosition.BOTTOM);
-        return;
-      }
-
-      // Credentials are valid, set user session
-      userService.setCurrentUserId(emailController.text);
-      userService.setCurrentUser(emailController.text);
 
       // Navigate to home screen
       Get.offAllNamed('/home');
 
-      Get.snackbar('Success', 'Login successful',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Success', 'Login successful!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Login failed';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No user found with this email';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Wrong password';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email address';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'This account has been disabled';
+      }
+      Get.snackbar('Error', errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('Error', 'Login failed: $e',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Login failed: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } finally {
       isLoading(false);
     }

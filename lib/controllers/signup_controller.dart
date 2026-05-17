@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../services/user_service.dart';
-import '../services/database_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupController extends GetxController {
   // Form controllers
@@ -25,6 +25,22 @@ class SignupController extends GetxController {
   final isLoading = false.obs;
   final passwordStrength = 0.obs;
   final showPasswordMismatch = false.obs;
+
+  /// Form key used by [SignupScreen] to trigger field-level validation.
+  final formKey = GlobalKey<FormState>();
+
+  // Profile image — UI only (picker not yet connected)
+  final profileImagePath = Rxn<String>();
+
+  /// Shows the camera icon in the UI but does NOT open a file picker.
+  void pickProfileImage() {
+    // TODO: integrate image_picker when backend upload is ready
+  }
+
+  /// Clears the locally selected image path.
+  void removeProfileImage() {
+    profileImagePath.value = null;
+  }
 
   // Static data
   final departments = [
@@ -116,18 +132,25 @@ class SignupController extends GetxController {
     selectedSemester(null); // Reset semester
   }
 
+
   // Handle signup
   Future<void> signup() async {
-    // Validation
-    if (fullNameController.text.isEmpty ||
-        studentIdController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        phoneController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        selectedDepartment.value == null ||
-        selectedProgramType.value == null ||
-        selectedSemester.value == null) {
-      Get.snackbar('Error', 'Please fill all required fields',
+    // Validate all TextFormFields via AppValidators
+    if (!(formKey.currentState?.validate() ?? false)) return;
+
+    // Validate dropdown selections not covered by Form fields
+    if (selectedDepartment.value == null) {
+      Get.snackbar('Error', 'Please select a department',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (selectedProgramType.value == null) {
+      Get.snackbar('Error', 'Please select a program type',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (selectedSemester.value == null) {
+      Get.snackbar('Error', 'Please select a semester',
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -138,50 +161,60 @@ class SignupController extends GetxController {
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
-      Get.snackbar('Error', 'Passwords do not match',
-          snackPosition: SnackPosition.BOTTOM);
-      return;
-    }
-
     try {
       isLoading(true);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Use email as userId (simple approach)
-      final userId = emailController.text;
-      final cgpaValue = double.tryParse(cgpaController.text) ?? 0.0;
-
-      // Save user data to Firestore
-      final databaseService = DatabaseService.to;
-      await databaseService.saveUserProfile(
-        userId: userId,
-        fullName: fullNameController.text,
-        email: emailController.text,
-        studentId: studentIdController.text,
-        phone: phoneController.text,
-        department: selectedDepartment.value ?? '',
-        programType: selectedProgramType.value ?? '',
-        semester: selectedSemester.value ?? '',
-        batch: selectedBatch.value ?? '',
-        cgpa: cgpaValue,
+      
+      // Create user with Firebase Authentication
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      // Set current user session in UserService
-      final userService = UserService.to;
-      userService.setCurrentUserId(userId);
-      userService.setCurrentUser(emailController.text);
+      final userId = userCredential.user?.uid;
+      if (userId == null) throw Exception('Failed to create user');
+
+      final cgpaValue = double.tryParse(cgpaController.text) ?? 0.0;
+
+      // Save user profile to Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'uid': userId,
+        'fullName': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'studentId': studentIdController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'department': selectedDepartment.value ?? '',
+        'programType': selectedProgramType.value ?? '',
+        'semester': selectedSemester.value ?? '',
+        'batch': selectedBatch.value ?? '',
+        'cgpa': cgpaValue,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
       // Navigate to home screen
       Get.offAllNamed('/home');
 
-      Get.snackbar('Success', 'Account created successfully',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Success', 'Account created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Signup failed';
+      if (e.code == 'weak-password') {
+        errorMessage = 'The password is too weak';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'An account already exists for this email';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email address';
+      }
+      Get.snackbar('Error', errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('Error', 'Signup failed: $e',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Signup failed: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } finally {
       isLoading(false);
     }

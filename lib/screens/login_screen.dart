@@ -85,20 +85,20 @@ class LoginScreen extends StatelessWidget {
 
               // Remember Me & Forgot Password
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Obx(
-                    () => Row(
-                      children: [
-                        Checkbox(
-                          value: controller.rememberMe.value,
-                          onChanged: (_) => controller.toggleRememberMe(),
-                          activeColor: const Color(0xFF1F6FEB),
-                        ),
-                        const Text('Remember me'),
-                      ],
-                    ),
-                  ),
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [//remmenber me feature coming soon
+                  // Obx(
+                  //   () => Row(
+                  //     children: [
+                  //       Checkbox(
+                  //         value: controller.rememberMe.value,
+                  //         onChanged: (_) => controller.toggleRememberMe(),
+                  //         activeColor: const Color(0xFF1F6FEB),
+                  //       ),
+                  //       const Text('Remember me'),
+                  //     ],
+                  //   ),
+                  // ),
                   TextButton(
                     onPressed: () => Get.snackbar('Info',
                         'Forgot password feature coming soon'),
@@ -179,7 +179,7 @@ class LoginScreen extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () => Get.snackbar('Info',
                         'Google Sign-In Coming Soon'),
-                    icon: const Icon(Icons.g_translate),
+                    icon: const Icon(Icons.g_mobiledata, color: Color.fromARGB(255, 190, 82, 223),size: 30,),
                     label: const Text('Google'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -191,20 +191,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => Get.snackbar('Info',
-                        'Facebook Sign-In Coming Soon'),
-                    icon: const Icon(Icons.facebook),
-                    label: const Text('Facebook'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      side: BorderSide(color: Colors.grey[300]!),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 24),

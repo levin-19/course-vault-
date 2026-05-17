@@ -1,27 +1,13 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'config/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'screens/auth_gate.dart';
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
-import 'services/user_service.dart';
-import 'services/database_service.dart';
+import 'routes/app_routes.dart';
+import 'screens/splash_screen.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // Initialize UserService and DatabaseService
-  Get.put(UserService());
-  Get.put(DatabaseService());
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const CourseVaultApp());
 }
 
@@ -33,18 +19,12 @@ class CourseVaultApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'CourseVault',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.light,
-      initialRoute: '/login',
-      getPages: [
-        GetPage(name: LoginScreen.routeName, page: () => const LoginScreen()),
-        GetPage(name: SignupScreen.routeName, page: () => const SignupScreen()),
-        GetPage(name: HomeScreen.routeName, page: () => const HomeScreen()),
-        GetPage(name: ProfileScreen.routeName, page: () => const ProfileScreen()),
-        GetPage(name: AuthGate.routeName, page: () => const AuthGate()),
-      ],
-      home: const AuthGate(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const SplashScreen(),
+      getPages: AppRoutes.routes,
     );
   }
 }

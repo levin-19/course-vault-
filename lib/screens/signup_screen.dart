@@ -1,6 +1,9 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/signup_controller.dart';
+import '../utils/validators.dart';
 
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
@@ -23,9 +26,105 @@ class SignupScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
+        child: Form(
+          key: controller.formKey,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile Picture Picker (Optional)
+            Center(
+              child: Obx(() {
+                final path = controller.profileImagePath.value;
+                return Column(
+                  children: [
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 52,
+                          backgroundColor: isDarkMode
+                              ? Colors.grey[700]
+                              : Colors.grey[200],
+                          backgroundImage: path != null && !kIsWeb
+                              ? FileImage(File(path))
+                              : null,
+                          child: path == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 52,
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[500],
+                                )
+                              : null,
+                        ),
+                        // Camera button
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: controller.pickProfileImage,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1F6FEB),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Remove button
+                        if (path != null)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: controller.removeProfileImage,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      path == null
+                          ? 'Add Profile Photo (Optional)'
+                          : 'Profile Photo Selected',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: path == null
+                            ? Colors.grey[600]
+                            : const Color(0xFF1F6FEB),
+                        fontWeight: path == null
+                            ? FontWeight.normal
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+            const SizedBox(height: 24),
+
             // Section 1: Personal Information
             Text(
               'Personal Information',
@@ -36,8 +135,10 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Full Name
-            TextField(
+            TextFormField(
               controller: controller.fullNameController,
+              validator: FormValidators.validateFullName,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: InputDecoration(
                 hintText: 'Full Name',
                 prefixIcon: const Icon(Icons.person_outlined),
@@ -51,8 +152,10 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Student ID
-            TextField(
+            TextFormField(
               controller: controller.studentIdController,
+              validator: FormValidators.validateStudentId,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: InputDecoration(
                 hintText: 'Student ID',
                 prefixIcon: const Icon(Icons.badge_outlined),
@@ -66,8 +169,11 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Email
-            TextField(
+            TextFormField(
               controller: controller.emailController,
+              validator: FormValidators.validateEmail,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 hintText: 'University Email',
                 prefixIcon: const Icon(Icons.email_outlined),
@@ -81,8 +187,11 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Phone
-            TextField(
+            TextFormField(
               controller: controller.phoneController,
+              validator: FormValidators.validatePhone,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 hintText: 'Phone Number',
                 prefixIcon: const Icon(Icons.phone_outlined),
@@ -205,8 +314,10 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // CGPA (Optional)
-            TextField(
+            TextFormField(
               controller: controller.cgpaController,
+              validator: FormValidators.validateCGPA,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: InputDecoration(
                 hintText: 'CGPA (Optional)',
                 prefixIcon: const Icon(Icons.grade_outlined),
@@ -234,9 +345,11 @@ class SignupScreen extends StatelessWidget {
               () => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
+                  TextFormField(
                     controller: controller.passwordController,
                     obscureText: !controller.isPasswordVisible.value,
+                    validator: FormValidators.validatePassword,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: InputDecoration(
                       hintText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outlined),
@@ -287,9 +400,14 @@ class SignupScreen extends StatelessWidget {
               () => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
+                  TextFormField(
                     controller: controller.confirmPasswordController,
                     obscureText: !controller.isConfirmPasswordVisible.value,
+                    validator: (value) => FormValidators.validatePasswordMatch(
+                      controller.passwordController.text,
+                      value,
+                    ),
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
                       prefixIcon: const Icon(Icons.lock_outlined),
@@ -422,6 +540,7 @@ class SignupScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
           ],
+          ),
         ),
       ),
     );

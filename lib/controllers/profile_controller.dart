@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../services/user_service.dart';
-import '../services/database_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileController extends GetxController {
   // Reactive variables
   final isLoading = false.obs;
   final isEditing = false.obs;
+
+  // Profile image — UI only (picker not yet connected)
+  final profileImagePath = Rxn<String>();
+
+  /// Shows the camera icon in the UI but does NOT open a file picker.
+  void pickProfileImage() {
+    // TODO: integrate image_picker when backend upload is ready
+  }
 
   // User profile data - Static (now editable)
   final fullNameController = TextEditingController();
@@ -64,32 +72,31 @@ class ProfileController extends GetxController {
     loadProfileData();
   }
 
+
   // Load profile data from Firebase
   Future<void> loadProfileData() async {
     try {
       isLoading(true);
-      // Get current user ID from UserService
-      final userService = UserService.to;
-      final userId = userService.currentUserId.value;
+      // Get current user from Firebase Auth
+      final user = FirebaseAuth.instance.currentUser;
       
-      if (userId.isEmpty) {
+      if (user == null) {
         Get.snackbar('Error', 'User not logged in',
             snackPosition: SnackPosition.BOTTOM);
         return;
       }
       
       // Fetch user data from Firestore
-      final databaseService = DatabaseService.to;
-      var userData = await databaseService.getUserProfile(userId);
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       
-      // If profile doesn't exist, show message
-      if (userData == null) {
-        Get.snackbar('Info', 'Please complete your profile by signing up',
-            snackPosition: SnackPosition.BOTTOM);
-        // Initialize with empty profile
-        userData = {
+      if (!doc.exists) {
+        // Initialize with basic data
+        Map<String, dynamic> profileData = {
           'fullName': '',
-          'email': userService.currentUserEmail.value,
+          'email': user.email ?? '',
           'studentId': '',
           'university': 'FAST University',
           'department': '',
@@ -101,32 +108,32 @@ class ProfileController extends GetxController {
           'joinDate': DateTime.now().toString().split(' ')[0],
           'profileImageUrl': null,
         };
+        userProfile(profileData);
+      } else {
+        final userData = doc.data()!;
+        Map<String, dynamic> profileData = {
+          'fullName': userData['fullName'] ?? '',
+          'email': userData['email'] ?? '',
+          'studentId': userData['studentId'] ?? '',
+          'university': 'FAST University',
+          'department': userData['department'] ?? '',
+          'programType': userData['programType'] ?? '',
+          'semester': userData['semester'] ?? '',
+          'batch': userData['batch'] ?? '',
+          'phone': userData['phone'] ?? '',
+          'cgpa': userData['cgpa'] ?? 0.0,
+          'joinDate': userData['createdAt']?.toString().split(' ')[0] ?? DateTime.now().toString().split(' ')[0],
+          'profileImageUrl': null,
+        };
+        userProfile(profileData);
+        
+        // Initialize controllers
+        fullNameController.text = profileData['fullName']?.toString() ?? '';
+        emailController.text = profileData['email']?.toString() ?? '';
+        studentIdController.text = profileData['studentId']?.toString() ?? '';
+        phoneController.text = profileData['phone']?.toString() ?? '';
+        cgpaController.text = profileData['cgpa']?.toString() ?? '';
       }
-      
-      // Update userProfile with data from Firestore
-      Map<String, dynamic> profileData = {
-        'fullName': userData['fullName'] ?? '',
-        'email': userData['email'] ?? '',
-        'studentId': userData['studentId'] ?? '',
-        'university': userData['university'] ?? 'FAST University',
-        'department': userData['department'] ?? '',
-        'programType': userData['programType'] ?? '',
-        'semester': userData['semester'] ?? '',
-        'batch': userData['batch'] ?? '',
-        'phone': userData['phone'] ?? '',
-        'cgpa': userData['cgpa'] ?? 0.0,
-        'joinDate': userData['joinDate'] ?? DateTime.now().toString().split(' ')[0],
-        'profileImageUrl': userData['profileImageUrl'],
-      };
-      
-      userProfile(profileData);
-      
-      // Initialize controllers with profile data
-      fullNameController.text = profileData['fullName']?.toString() ?? '';
-      emailController.text = profileData['email']?.toString() ?? '';
-      studentIdController.text = profileData['studentId']?.toString() ?? '';
-      phoneController.text = profileData['phone']?.toString() ?? '';
-      cgpaController.text = profileData['cgpa']?.toString() ?? '';
     } catch (e) {
       Get.snackbar('Error', 'Failed to load profile: $e',
           snackPosition: SnackPosition.BOTTOM);
@@ -144,51 +151,45 @@ class ProfileController extends GetxController {
   Future<void> saveProfile() async {
     try {
       isLoading(true);
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 500));
       
-      // Get current user ID
-      final userService = UserService.to;
-      final userId = userService.currentUserId.value;
-      
-      if (userId.isEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
         Get.snackbar('Error', 'User not logged in',
             snackPosition: SnackPosition.BOTTOM);
         return;
       }
       
-      // Create updated profile map
-      Map<String, dynamic> updatedProfile = Map.from(userProfile);
-      updatedProfile.addAll({
+      // Update Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
         'fullName': fullNameController.text,
-        'email': emailController.text,
         'studentId': studentIdController.text,
         'phone': phoneController.text,
         'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
       });
       
-      // Save to Firestore
-      final databaseService = DatabaseService.to;
-      await databaseService.updateUserProfile(
-        userId: userId,
-        updates: {
-          'fullName': fullNameController.text,
-          'email': emailController.text,
-          'studentId': studentIdController.text,
-          'phone': phoneController.text,
-          'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
-        },
-      );
-      
       // Update local state
+      Map<String, dynamic> updatedProfile = Map.from(userProfile);
+      updatedProfile.addAll({
+        'fullName': fullNameController.text,
+        'studentId': studentIdController.text,
+        'phone': phoneController.text,
+        'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
+      });
       userProfile(updatedProfile);
       
       isEditing(false);
       Get.snackbar('Success', 'Profile updated successfully',
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white);
     } catch (e) {
       Get.snackbar('Error', 'Failed to save profile: $e',
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } finally {
       isLoading(false);
     }
@@ -226,19 +227,20 @@ class ProfileController extends GetxController {
   Future<void> logout() async {
     try {
       isLoading(true);
-      // Simulate logout
-      await Future.delayed(const Duration(milliseconds: 500));
       
-      // Clear user session from UserService
-      final userService = UserService.to;
-      userService.logout();
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
       
       Get.offAllNamed('/login');
       Get.snackbar('Success', 'Logged out successfully',
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white);
     } catch (e) {
       Get.snackbar('Error', 'Logout failed: $e',
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     } finally {
       isLoading(false);
     }
