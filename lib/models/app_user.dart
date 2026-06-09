@@ -2,7 +2,7 @@
 class AppUser {
   const AppUser({
     required this.uid,
-    required this.name,
+    required this.fullName,
     required this.email,
     this.avatarUrl,
     this.studentId,
@@ -14,7 +14,7 @@ class AppUser {
   });
 
   final String uid;
-  final String name;
+  final String fullName;
   final String email;
   final String? avatarUrl;
 
@@ -30,7 +30,7 @@ class AppUser {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'uid': uid,
-      'name': name,
+      'fullName': fullName,
       'email': email,
       'avatarUrl': avatarUrl,
       'studentId': studentId,
@@ -43,7 +43,7 @@ class AppUser {
   }
 
   /// Create from map (Firestore/database)
-  factory AppUser.fromMap(Map<String, dynamic> map) {
+  factory AppUser.fromMap(String uid, Map<String, dynamic> map) {
     DateTime? parsedCreatedAt;
     final dynamic createdAtValue = map['createdAt'];
 
@@ -56,8 +56,8 @@ class AppUser {
     }
 
     return AppUser(
-      uid: (map['uid'] ?? '') as String,
-      name: (map['name'] ?? '') as String,
+      uid: uid,
+      fullName: (map['fullName'] ?? '') as String,
       email: (map['email'] ?? '') as String,
       avatarUrl: map['avatarUrl'] as String?,
       studentId: map['studentId'] as String?,
@@ -72,7 +72,7 @@ class AppUser {
   /// Copy with - Create a copy with some fields updated
   AppUser copyWith({
     String? uid,
-    String? name,
+    String? fullName,
     String? email,
     String? avatarUrl,
     String? studentId,
@@ -84,7 +84,7 @@ class AppUser {
   }) {
     return AppUser(
       uid: uid ?? this.uid,
-      name: name ?? this.name,
+      fullName: fullName ?? this.fullName,
       email: email ?? this.email,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       studentId: studentId ?? this.studentId,

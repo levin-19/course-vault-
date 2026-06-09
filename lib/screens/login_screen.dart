@@ -12,7 +12,7 @@ class LoginScreen extends StatelessWidget {
     final controller = Get.put(LoginController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
       body: SingleChildScrollView(
         child: Container(
           width: double.infinity,
@@ -82,7 +82,8 @@ class LoginScreen extends StatelessWidget {
               // Remember Me & Forgot Password
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [//remmenber me feature coming soon
+                children: [
+                  //remmenber me feature coming soon
                   // Obx(
                   //   () => Row(
                   //     children: [
@@ -96,8 +97,8 @@ class LoginScreen extends StatelessWidget {
                   //   ),
                   // ),
                   TextButton(
-                    onPressed: () => Get.snackbar('Info',
-                        'Forgot password feature coming soon'),
+                    onPressed: () => Get.snackbar(
+                        'Info', 'Forgot password feature coming soon'),
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(color: Color(0xFF1F6FEB)),
@@ -173,9 +174,13 @@ class LoginScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () => Get.snackbar('Info',
-                        'Google Sign-In Coming Soon'),
-                    icon: const Icon(Icons.g_mobiledata, color: Color.fromARGB(255, 190, 82, 223),size: 30,),
+                    onPressed: () =>
+                        Get.snackbar('Info', 'Google Sign-In Coming Soon'),
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: Color.fromARGB(255, 190, 82, 223),
+                      size: 30,
+                    ),
                     label: const Text('Google'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

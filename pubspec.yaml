@@ -17,6 +17,8 @@ dependencies:
   cloud_firestore: any
   firebase_storage: any
   image_picker: ^1.0.4
+  rxdart: ^0.27.7
+  fl_chart: ^0.66.0
 
 dev_dependencies:
   flutter_test:

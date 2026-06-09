@@ -20,14 +20,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.deepPurple,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.school, size: 80, color: Colors.white),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'CourseVault',
               style: TextStyle(
@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Your Academic Companion',
               style: TextStyle(fontSize: 16, color: Colors.white70),

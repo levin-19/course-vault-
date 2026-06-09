@@ -43,9 +43,9 @@ class NotesListScreen extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
-                leading: CircleAvatar(
+                leading: const CircleAvatar(
                   backgroundColor: Colors.deepPurple,
-                  child: const Icon(Icons.note, color: Colors.white),
+                  child: Icon(Icons.note, color: Colors.white),
                 ),
                 title: Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('${note.subject} • ${_formatDate(note.createdAt)}'),

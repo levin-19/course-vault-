@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/user_service.dart';
 
 class SignupController extends GetxController {
   // Form controllers
@@ -189,6 +190,9 @@ class SignupController extends GetxController {
         'cgpa': cgpaValue,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Set the current user ID in UserService
+      UserService.to.setCurrentUserId(userId);
 
       // Navigate to home screen
       Get.offAllNamed('/home');

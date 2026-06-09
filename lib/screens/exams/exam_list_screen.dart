@@ -49,9 +49,9 @@ class ExamListScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
+                        const CircleAvatar(
                           backgroundColor: Colors.purple,
-                          child: const Icon(Icons.school, color: Colors.white),
+                          child: Icon(Icons.school, color: Colors.white),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

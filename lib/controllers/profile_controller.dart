@@ -7,6 +7,7 @@ class ProfileController extends GetxController {
   // Reactive variables
   final isLoading = false.obs;
   final isEditing = false.obs;
+  final isAdmin = false.obs;
 
   // Profile image — UI only (picker not yet connected)
   final profileImagePath = Rxn<String>();
@@ -63,6 +64,8 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     loadProfileData();
+    checkAdminStatus();
+    _checkAndRedirectAdmin();
   }
 
   @override
@@ -70,6 +73,14 @@ class ProfileController extends GetxController {
     super.onReady();
     // Reload data when screen comes into view
     loadProfileData();
+    checkAdminStatus();
+  }
+
+  /// Check if admin and optionally redirect
+  Future<void> _checkAndRedirectAdmin() async {
+    await checkAdminStatus();
+    // Admin can choose which profile to view
+    // No automatic redirect - let them access both
   }
 
 
@@ -243,6 +254,61 @@ class ProfileController extends GetxController {
           colorText: Colors.white);
     } finally {
       isLoading(false);
+    }
+  }
+
+  // Check if user is admin
+  Future<void> checkAdminStatus() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      print('🔍 DEBUG: Checking admin status...');
+      print('🔍 DEBUG: Current user: ${user?.uid}');
+      print('🔍 DEBUG: Current email: ${user?.email}');
+      
+      if (user == null) {
+        print('❌ DEBUG: No user logged in');
+        return;
+      }
+      
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      print('🔍 DEBUG: Document exists: ${doc.exists}');
+      
+      if (doc.exists) {
+        final data = doc.data();
+        print('🔍 DEBUG: User data: $data');
+        final role = data?['role'] ?? 'user';
+        print('🔍 DEBUG: Role value: "$role"');
+        print('🔍 DEBUG: Role type: ${role.runtimeType}');
+        
+        isAdmin.value = role == 'admin';
+        print('✅ DEBUG: isAdmin set to: ${isAdmin.value}');
+        
+        if (isAdmin.value) {
+          Get.snackbar(
+            '👑 Admin Access',
+            'Admin dashboard is now available!',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.purple,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
+      } else {
+        print('❌ DEBUG: User document does not exist');
+      }
+    } catch (e) {
+      print('❌ ERROR: Failed to check admin status: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to check admin status: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 

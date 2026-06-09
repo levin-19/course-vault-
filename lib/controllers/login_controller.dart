@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/user_service.dart';
 
 class LoginController extends GetxController {
   // Reactive variables
@@ -25,6 +26,10 @@ class LoginController extends GetxController {
     isPasswordVisible.toggle();
   }
 
+  // Hardcoded admin credentials
+  static const String ADMIN_EMAIL = 'admin@coursevault.com';
+  static const String ADMIN_PASSWORD = 'admin123';
+
   // Handle login
   Future<void> login() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
@@ -38,13 +43,30 @@ class LoginController extends GetxController {
     try {
       isLoading(true);
       
-      // Sign in with Firebase Authentication
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      // Check for hardcoded admin credentials first
+      if (emailController.text.trim() == ADMIN_EMAIL &&
+          passwordController.text == ADMIN_PASSWORD) {
+        // Admin login - navigate directly to admin dashboard
+        Get.snackbar('Success', 'Admin login successful!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white);
+        
+        // Navigate to admin dashboard
+        Get.offAllNamed('/admin-dashboard');
+        return;
+      }
+      
+      // Regular student login with Firebase Authentication
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      // Navigate to home screen
+      // Set the current user ID in UserService
+      UserService.to.setCurrentUserId(userCredential.user!.uid);
+
+      // Navigate to home screen for students
       Get.offAllNamed('/home');
 
       Get.snackbar('Success', 'Login successful!',

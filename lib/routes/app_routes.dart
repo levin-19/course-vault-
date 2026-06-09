@@ -5,6 +5,12 @@ import '../screens/signup_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/admin_screen.dart';
+import '../screens/admin_dashboard_screen.dart';
+import '../screens/admin_profile_screen.dart';
+import '../screens/debug_admin_screen.dart';
+import '../screens/users_list_screen.dart';
+import '../screens/user_details_screen.dart';
 import '../screens/notes/notes_list_screen.dart';
 import '../screens/notes/note_detail_screen.dart';
 import '../screens/notes/create_note_screen.dart';
@@ -23,6 +29,12 @@ class AppRoutes {
     GetPage(name: '/signup', page: () => const SignupScreen()),
     GetPage(name: '/home', page: () => const HomeScreen()),
     GetPage(name: '/profile', page: () => const ProfileScreen()),
+    GetPage(name: '/admin', page: () => const AdminScreen()),
+    GetPage(name: '/admin-dashboard', page: () => const AdminDashboardScreen()),
+    GetPage(name: '/admin-profile', page: () => const AdminProfileScreen()),
+    GetPage(name: '/debug-admin', page: () => const DebugAdminScreen()),
+    GetPage(name: '/users-list', page: () => const UsersListScreen()),
+    GetPage(name: '/user-details', page: () => const UserDetailsScreen()),
     GetPage(name: '/notes', page: () => const NotesListScreen()),
     GetPage(name: '/note-detail', page: () => const NoteDetailScreen()),
     GetPage(name: '/create-note', page: () => const CreateNoteScreen()),

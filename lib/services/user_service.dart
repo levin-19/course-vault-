@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 class UserService extends GetxService {
-  static UserService get to => Get.find();
+  static UserService get to => Get.put(UserService());
 
   // Track logged-in user
   final currentUserId = ''.obs;
