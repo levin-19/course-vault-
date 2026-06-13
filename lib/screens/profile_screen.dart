@@ -16,7 +16,8 @@ class ProfileScreen extends StatelessWidget {
         MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
+      backgroundColor:
+          isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
       body: Obx(
         () => controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
@@ -24,20 +25,24 @@ class ProfileScreen extends StatelessWidget {
                 slivers: [
                   // Professional Gradient Header
                   SliverAppBar(
-                    expandedHeight: 280,
+                    expandedHeight: 310,
                     floating: false,
                     pinned: true,
-                    backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
+                    backgroundColor: isDarkMode
+                        ? const Color(0xFF0F1419)
+                        : const Color(0xFFF8F9FA),
                     elevation: 0,
                     flexibleSpace: FlexibleSpaceBar(
-                      background: _buildHeaderBackground(context, controller, isDarkMode),
+                      background: _buildHeaderBackground(
+                          context, controller, isDarkMode),
                     ),
                   ),
                   // Main Content
                   SliverToBoxAdapter(
                     child: SingleChildScrollView(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -46,23 +51,31 @@ class ProfileScreen extends StatelessWidget {
                             const SizedBox(height: 28),
 
                             // Personal Information
-                            _buildSectionHeader('Personal Information', Icons.person_outline),
-                            _buildPersonalInfoSection(context, controller, isDarkMode),
+                            _buildSectionHeader(
+                                'Personal Information', Icons.person_outline),
+                            _buildPersonalInfoSection(
+                                context, controller, isDarkMode),
                             const SizedBox(height: 28),
 
                             // Academic Details
-                            _buildSectionHeader('Academic Details', Icons.school_outlined),
-                            _buildAcademicDetailsSection(context, controller, isDarkMode),
+                            _buildSectionHeader(
+                                'Academic Details', Icons.school_outlined),
+                            _buildAcademicDetailsSection(
+                                context, controller, isDarkMode),
                             const SizedBox(height: 28),
 
                             // Contact Information
-                            _buildSectionHeader('Contact Information', Icons.contact_mail_outlined),
-                            _buildContactInfoSection(context, controller, isDarkMode),
+                            _buildSectionHeader('Contact Information',
+                                Icons.contact_mail_outlined),
+                            _buildContactInfoSection(
+                                context, controller, isDarkMode),
                             const SizedBox(height: 28),
 
                             // Settings & Actions
-                            _buildSectionHeader('Preferences', Icons.settings_outlined),
-                            _buildSettingsSection(context, controller, isDarkMode),
+                            _buildSectionHeader(
+                                'Preferences', Icons.settings_outlined),
+                            _buildSettingsSection(
+                                context, controller, isDarkMode),
                             const SizedBox(height: 24),
                           ],
                         ),
@@ -122,7 +135,8 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, top: 50, bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -190,14 +204,16 @@ class ProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.badge, color: Colors.white, size: 14),
+                            const Icon(Icons.badge,
+                                color: Colors.white, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               studentId.isNotEmpty ? studentId : 'No ID',
@@ -212,14 +228,16 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.school, color: Colors.white, size: 14),
+                            const Icon(Icons.school,
+                                color: Colors.white, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               department.isNotEmpty ? department : 'Department',
@@ -593,21 +611,22 @@ class ProfileScreen extends StatelessWidget {
     return Obx(
       () => Column(
         children: [
-          // Debug Admin Tool Button (always visible for testing)
-          GestureDetector(
-            onTap: () => Get.toNamed('/debug-admin'),
-            child: _buildSettingCard(
-              'Debug Admin Tool',
-              'Test and fix admin access',
-              Icons.build,
-              Colors.orange,
-              isDarkMode,
+          // Debug Admin Tool Button (only visible to admins)
+          if (controller.isAdmin.value) ...[
+            GestureDetector(
+              onTap: () => Get.toNamed('/debug-admin'),
+              child: _buildSettingCard(
+                'Debug Admin Tool',
+                'Test and fix admin access',
+                Icons.build,
+                Colors.orange,
+                isDarkMode,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           // Admin Profile Button (only visible to admins)
-          if (controller.isAdmin.value) ...
-          [
+          if (controller.isAdmin.value) ...[
             GestureDetector(
               onTap: () => Get.toNamed('/admin-profile'),
               child: _buildSettingCard(
@@ -621,8 +640,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           // Admin Dashboard Button (only visible to admins)
-          if (controller.isAdmin.value) ...
-          [
+          if (controller.isAdmin.value) ...[
             GestureDetector(
               onTap: () => Get.toNamed('/admin-dashboard'),
               child: _buildSettingCard(
@@ -773,7 +791,8 @@ class ProfileScreen extends StatelessWidget {
             fontSize: 12,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         ),
       ),
     );

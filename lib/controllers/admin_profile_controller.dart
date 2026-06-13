@@ -32,27 +32,44 @@ class AdminProfileController extends GetxController {
     _loadAdminProfile();
   }
 
+  // Hardcoded admin credentials (same as LoginController)
+  static const String _adminEmail = 'admin@coursevault.com';
+
   /// Load admin profile data
   Future<void> _loadAdminProfile() async {
     isLoading.value = true;
 
     try {
-      // Get current user
+      // Check if this is the hardcoded admin (no Firebase account needed)
       final currentUser = _firebaseAuth.currentUser;
+      final sessionEmail = _userService.getCurrentUserEmail();
+
+      if (sessionEmail == _adminEmail) {
+        // Hardcoded admin — set profile directly, no Firestore check needed
+        isAdmin.value = true;
+        adminName.value = 'Administrator';
+        adminEmail.value = _adminEmail;
+        adminPhone.value = 'Not set';
+        adminRole.value = 'Super Admin';
+        joinDate.value = 'N/A';
+        await _loadAdminStats();
+        isLoading.value = false;
+        return;
+      }
+
+      // Firebase user admin check (for future Firebase-based admins)
       if (currentUser == null) {
         Get.snackbar('Error', 'User not authenticated');
         isLoading.value = false;
         return;
       }
 
-      // Get user ID
       String userId = _userService.getCurrentUserId();
       if (userId.isEmpty) {
         userId = currentUser.uid;
         _userService.setCurrentUserId(userId);
       }
 
-      // Verify admin status
       bool adminStatus = await _databaseService.checkIfAdmin(userId);
       isAdmin.value = adminStatus;
 
@@ -62,15 +79,13 @@ class AdminProfileController extends GetxController {
         return;
       }
 
-      // Load profile data from Firestore
       final userDoc = await _firestore.collection('users').doc(userId).get();
       if (userDoc.exists) {
         final data = userDoc.data()!;
         adminName.value = data['fullName'] ?? 'Admin';
         adminEmail.value = data['email'] ?? currentUser.email ?? '';
         adminPhone.value = data['phone'] ?? 'Not set';
-        
-        // Get join date
+
         if (data['createdAt'] != null) {
           final timestamp = data['createdAt'] as Timestamp;
           final date = timestamp.toDate();
@@ -80,28 +95,30 @@ class AdminProfileController extends GetxController {
         }
       }
 
-      // Load admin statistics (mock data for now)
       await _loadAdminStats();
-
       isLoading.value = false;
     } catch (e) {
-      print('ERROR: Failed to load admin profile: $e');
       Get.snackbar('Error', 'Failed to load admin profile');
       isLoading.value = false;
     }
   }
 
-  /// Load admin statistics
+  /// Load admin statistics from real Firestore data
   Future<void> _loadAdminStats() async {
     try {
-      // Get total users
       final users = await _databaseService.getAllUsers();
       managedUsers.value = users.length;
 
-      // Mock statistics (replace with actual data)
-      reviewedNotes.value = 156;
-      deletedContent.value = 23;
-      totalActions.value = managedUsers.value + reviewedNotes.value + deletedContent.value;
+      // Count notes platform-wide
+      final notesSnapshot =
+          await _firestore.collection('notes').get();
+      reviewedNotes.value = notesSnapshot.docs.length;
+
+      // We track deletedContent as 0 unless we log it separately
+      deletedContent.value = 0;
+
+      totalActions.value =
+          managedUsers.value + reviewedNotes.value + deletedContent.value;
     } catch (e) {
       print('ERROR: Failed to load admin stats: $e');
     }
@@ -117,10 +134,18 @@ class AdminProfileController extends GetxController {
     Get.snackbar('Info', 'Change password feature coming soon');
   }
 
-  /// Logout
+  /// Logout — clears session and navigates to login.
+  /// For hardcoded admin there is no Firebase session, so we only clear UserService.
   Future<void> logout() async {
     try {
-      await _firebaseAuth.signOut();
+      // Clear the stored session email (works for both admin and Firebase users)
+      _userService.logout();
+
+      // Only sign out from Firebase if there is an active Firebase session
+      if (_firebaseAuth.currentUser != null) {
+        await _firebaseAuth.signOut();
+      }
+
       Get.offAllNamed('/login');
       Get.snackbar('Success', 'Logged out successfully');
     } catch (e) {

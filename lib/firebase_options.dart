@@ -41,46 +41,51 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC4ZkOheIueWmFxwkN4KuudnJnIohUsRqI',
-    appId: '1:1097280974829:web:6bb77936ee20ff5e7a41e4',
-    messagingSenderId: '1097280974829',
-    projectId: 'coursevault-12ac3',
-    authDomain: 'coursevault-12ac3.firebaseapp.com',
-    storageBucket: 'coursevault-12ac3.firebasestorage.app',
+    apiKey: 'AIzaSyDuof1_n2DxPedGnUvKi1V3jD43ysligM8',
+    appId: '1:14521645431:web:744deeb13798f4f4f18972',
+    messagingSenderId: '14521645431',
+    projectId: 'apartment-inspection',
+    authDomain: 'apartment-inspection.firebaseapp.com',
+    databaseURL: 'https://apartment-inspection-default-rtdb.firebaseio.com',
+    storageBucket: 'apartment-inspection.firebasestorage.app',
+    measurementId: 'G-HPSJG44Q09',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCOWmLWIyQAh2XRJlLepUEv_sPYI1pf9fs',
-    appId: '1:1097280974829:android:d80a599209d2e30d7a41e4',
-    messagingSenderId: '1097280974829',
-    projectId: 'coursevault-12ac3',
-    storageBucket: 'coursevault-12ac3.firebasestorage.app',
+    apiKey: 'AIzaSyCu9svUqJvnA_Js_ong9_HQhuRunpV4QW8',
+    appId: '1:14521645431:android:eeb582de5711af4cf18972',
+    messagingSenderId: '14521645431',
+    projectId: 'apartment-inspection',
+    databaseURL: 'https://apartment-inspection-default-rtdb.firebaseio.com',
+    storageBucket: 'apartment-inspection.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCGDsBk4nmIElqSBaxDUgBXK55W6Kz8ZPE',
-    appId: '1:1097280974829:ios:5c9f5fb8a118bdef7a41e4',
-    messagingSenderId: '1097280974829',
-    projectId: 'coursevault-12ac3',
-    storageBucket: 'coursevault-12ac3.firebasestorage.app',
+    apiKey: 'AIzaSyDMmJFV32Gt7JsYctQMzahA3Rg9Wv1HJYs',
+    appId: '1:14521645431:ios:7c9801195f9b2ac4f18972',
+    messagingSenderId: '14521645431',
+    projectId: 'apartment-inspection',
+    databaseURL: 'https://apartment-inspection-default-rtdb.firebaseio.com',
+    storageBucket: 'apartment-inspection.firebasestorage.app',
     iosBundleId: 'com.example.coursevaultApp',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCGDsBk4nmIElqSBaxDUgBXK55W6Kz8ZPE',
-    appId: '1:1097280974829:ios:5c9f5fb8a118bdef7a41e4',
-    messagingSenderId: '1097280974829',
-    projectId: 'coursevault-12ac3',
-    storageBucket: 'coursevault-12ac3.firebasestorage.app',
+    apiKey: 'AIzaSyDMmJFV32Gt7JsYctQMzahA3Rg9Wv1HJYs',
+    appId: '1:14521645431:ios:7c9801195f9b2ac4f18972',
+    messagingSenderId: '14521645431',
+    projectId: 'apartment-inspection',
+    databaseURL: 'https://apartment-inspection-default-rtdb.firebaseio.com',
+    storageBucket: 'apartment-inspection.firebasestorage.app',
     iosBundleId: 'com.example.coursevaultApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyC4ZkOheIueWmFxwkN4KuudnJnIohUsRqI',
-    appId: '1:1097280974829:web:5547c8ec73dd7baa7a41e4',
-    messagingSenderId: '1097280974829',
-    projectId: 'coursevault-12ac3',
-    authDomain: 'coursevault-12ac3.firebaseapp.com',
-    storageBucket: 'coursevault-12ac3.firebasestorage.app',
+    apiKey: 'AIzaSyDuof1_n2DxPedGnUvKi1V3jD43ysligM8',
+    appId: '1:14521645431:web:d2e4c228a8b1f4bff18972',
+    messagingSenderId: '14521645431',
+    projectId: 'apartment-inspection',
+    authDomain: 'apartment-inspection.firebaseapp.com',
+    databaseURL: 'https://apartment-inspection-default-rtdb.firebaseio.com',
+    storageBucket: 'apartment-inspection.firebasestorage.app',
+    measurementId: 'G-6T63Z1Q2ML',
   );
 }

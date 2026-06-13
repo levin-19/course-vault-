@@ -11,6 +11,7 @@ class AppUser {
     this.semester,
     this.universityEmail,
     this.createdAt,
+    this.status = 'active', // Default status is 'active'
   });
 
   final String uid;
@@ -26,6 +27,9 @@ class AppUser {
   final String? universityEmail;
   final DateTime? createdAt;
 
+  // Account status: 'active' or 'suspended'
+  final String status;
+
   /// Convert to map for Firestore/database storage
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -39,6 +43,7 @@ class AppUser {
       'semester': semester,
       'universityEmail': universityEmail,
       'createdAt': createdAt?.toIso8601String(),
+      'status': status, // Persist account status
     };
   }
 
@@ -66,6 +71,8 @@ class AppUser {
       semester: map['semester'] as String?,
       universityEmail: map['universityEmail'] as String?,
       createdAt: parsedCreatedAt,
+      // Read status from Firestore, fallback to 'active' if not set
+      status: (map['status'] as String?) ?? 'active',
     );
   }
 
@@ -81,6 +88,7 @@ class AppUser {
     String? semester,
     String? universityEmail,
     DateTime? createdAt,
+    String? status,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -93,6 +101,7 @@ class AppUser {
       semester: semester ?? this.semester,
       universityEmail: universityEmail ?? this.universityEmail,
       createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
     );
   }
 

@@ -176,7 +176,7 @@ class SignupController extends GetxController {
 
       final cgpaValue = double.tryParse(cgpaController.text) ?? 0.0;
 
-      // Save user profile to Firestore
+      // Save user profile to Firestore — role is always 'student' on signup
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'uid': userId,
         'fullName': fullNameController.text.trim(),
@@ -188,6 +188,8 @@ class SignupController extends GetxController {
         'semester': selectedSemester.value ?? '',
         'batch': selectedBatch.value ?? '',
         'cgpa': cgpaValue,
+        'role': 'student', // every new user is a student by default
+        'status': 'active',
         'createdAt': FieldValue.serverTimestamp(),
       });
 

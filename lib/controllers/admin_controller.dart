@@ -10,6 +10,9 @@ class AdminController extends GetxController {
   final _userService = UserService.to;
   final _firebaseAuth = FirebaseAuth.instance;
 
+  // Hardcoded admin credentials (same as LoginController)
+  static const String _adminEmail = 'admin@coursevault.com';
+
   var isLoading = false.obs;
   var isAdmin = false.obs;
 
@@ -36,10 +39,10 @@ class AdminController extends GetxController {
   var totalNotes = 0.obs;
   var totalResources = 0.obs;
 
-  // Store subscriptions for cleanup
-  late StreamSubscription _usersSubscription;
-  late StreamSubscription _notesSubscription;
-  late StreamSubscription _resourcesSubscription;
+  // Store subscriptions for cleanup — nullable so they are safe before streams start
+  StreamSubscription? _usersSubscription;
+  StreamSubscription? _notesSubscription;
+  StreamSubscription? _resourcesSubscription;
 
   @override
   void onInit() {
@@ -52,18 +55,27 @@ class AdminController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Get current user ID
+      // ── Check for hardcoded admin first (no Firebase UID required) ──
+      final sessionEmail = _userService.getCurrentUserEmail();
+      if (sessionEmail == _adminEmail) {
+        isAdmin.value = true;
+        _setupUserStream();
+        _setupNotesStream();
+        _setupResourcesStream();
+        isLoading.value = false;
+        return;
+      }
+
+      // ── Regular Firebase-based admin check ──
       String userId = _userService.getCurrentUserId();
       if (userId.isEmpty) {
         userId = _firebaseAuth.currentUser?.uid ?? '';
         if (userId.isNotEmpty) {
           _userService.setCurrentUserId(userId);
-          print('DEBUG: Retrieved user ID from Firebase Auth: $userId');
         }
       }
 
       if (userId.isEmpty) {
-        print('ERROR: No user ID found');
         Get.snackbar('Error', 'User not authenticated');
         isLoading.value = false;
         return;
@@ -74,13 +86,10 @@ class AdminController extends GetxController {
       isAdmin.value = adminStatus;
 
       if (!adminStatus) {
-        print('ERROR: User is not an admin');
         Get.snackbar('Unauthorized', 'You do not have admin privileges');
         isLoading.value = false;
         return;
       }
-
-      print('DEBUG: Admin verified, loading data...');
 
       // Set up real-time streams for all data
       _setupUserStream();
@@ -256,10 +265,10 @@ class AdminController extends GetxController {
   Future<void> refreshAllData() async {
     isLoading.value = true;
     try {
-      // Cancel existing subscriptions
-      _usersSubscription.cancel();
-      _notesSubscription.cancel();
-      _resourcesSubscription.cancel();
+      // Cancel existing subscriptions safely
+      _usersSubscription?.cancel();
+      _notesSubscription?.cancel();
+      _resourcesSubscription?.cancel();
 
       // Restart streams
       _setupUserStream();
@@ -282,9 +291,11 @@ class AdminController extends GetxController {
 
   @override
   void onClose() {
-    _usersSubscription.cancel();
-    _notesSubscription.cancel();
-    _resourcesSubscription.cancel();
+    // Use null-safe cancel — subscriptions may not be initialized
+    // if admin check failed before streams were started
+    _usersSubscription?.cancel();
+    _notesSubscription?.cancel();
+    _resourcesSubscription?.cancel();
     super.onClose();
   }
 }

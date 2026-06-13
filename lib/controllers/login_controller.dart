@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/user_service.dart';
 
 class LoginController extends GetxController {
@@ -46,28 +47,58 @@ class LoginController extends GetxController {
       // Check for hardcoded admin credentials first
       if (emailController.text.trim() == ADMIN_EMAIL &&
           passwordController.text == ADMIN_PASSWORD) {
-        // Admin login - navigate directly to admin dashboard
+        // Store admin email in session so AdminProfileController can identify it
+        UserService.to.setCurrentUser(ADMIN_EMAIL);
+
         Get.snackbar('Success', 'Admin login successful!',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.green,
             colorText: Colors.white);
-        
-        // Navigate to admin dashboard
+
         Get.offAllNamed('/admin-dashboard');
         return;
       }
       
-      // Regular student login with Firebase Authentication
+      // Regular student/admin login with Firebase Authentication
       final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      // Set the current user ID in UserService
-      UserService.to.setCurrentUserId(userCredential.user!.uid);
+      final uid = userCredential.user!.uid;
+      UserService.to.setCurrentUserId(uid);
 
-      // Navigate to home screen for students
-      Get.offAllNamed('/home');
+      // Read role from Firestore to decide which dashboard to load
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      if (!doc.exists) {
+        // Create basic user profile if document is missing
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'uid': uid,
+          'email': emailController.text.trim(),
+          'role': 'student',
+          'status': 'active',
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        Get.offAllNamed('/home');
+      } else {
+        final role = doc.data()?['role'];
+        if (role == 'admin') {
+          Get.offAllNamed('/admin-dashboard');
+        } else if (role == 'student') {
+          Get.offAllNamed('/home');
+        } else {
+          // Missing or invalid role, update database and fallback to student role
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .update({'role': 'student'});
+          Get.offAllNamed('/home');
+        }
+      }
 
       Get.snackbar('Success', 'Login successful!',
           snackPosition: SnackPosition.BOTTOM,

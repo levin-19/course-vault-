@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/admin_dashboard_controller.dart';
 import '../models/app_user.dart';
+import '../services/user_service.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -58,101 +59,99 @@ class AdminDashboardScreen extends StatelessWidget {
 
   /// Dashboard Header
   Widget _buildDashboardHeader(AdminDashboardController controller, bool isDarkMode) {
-    return Obx(
-      () => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1F6FEB), Color(0xFF5E35B1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1F6FEB), Color(0xFF5E35B1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Admin Avatar
-            GestureDetector(
-              onTap: controller.navigateToAdminProfile,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: const CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    'A',
-                    style: TextStyle(
-                      color: Color(0xFF1F6FEB),
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Admin Avatar
+          GestureDetector(
+            onTap: controller.navigateToAdminProfile,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+              ),
+              child: const CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.white,
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: Color(0xFF1F6FEB),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
-            // Admin Info
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome back,',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+          ),
+          const SizedBox(width: 16),
+          // Admin Info
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome back,',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Administrator',
-                    style: TextStyle(
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Administrator',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.admin_panel_settings,
                       color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      size: 14,
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.admin_panel_settings,
+                    SizedBox(width: 4),
+                    Text(
+                      'Admin Access',
+                      style: TextStyle(
                         color: Colors.white,
-                        size: 14,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Admin Access',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            // Logout Button
-            IconButton(
-              onPressed: () => _showLogoutDialog(),
-              icon: const Icon(Icons.logout, color: Colors.white),
-              tooltip: 'Logout',
-            ),
-          ],
-        ),
+          ),
+          // Logout Button
+          IconButton(
+            onPressed: () => _showLogoutDialog(),
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
     );
   }
@@ -168,6 +167,10 @@ class AdminDashboardScreen extends StatelessWidget {
       buttonColor: Colors.red,
       onConfirm: () {
         Get.back();
+        // Clear admin session before navigating to login
+        try {
+          Get.find<UserService>().logout();
+        } catch (_) {}
         Get.offAllNamed('/login');
       },
     );
@@ -552,15 +555,20 @@ class AdminDashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.1),
+              // Dynamic color based on user.status
+              color: user.status == 'suspended'
+                  ? Colors.orange.withOpacity(0.1)
+                  : const Color(0xFF4CAF50).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'Active',
+            child: Text(
+              user.status == 'suspended' ? 'Suspended' : 'Active',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF4CAF50),
+                color: user.status == 'suspended'
+                    ? Colors.orange
+                    : const Color(0xFF4CAF50),
               ),
             ),
           ),
@@ -572,9 +580,9 @@ class AdminDashboardScreen extends StatelessWidget {
               size: 18,
             ),
             itemBuilder: (context) => [
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'view',
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.visibility, size: 18),
                     SizedBox(width: 8),
@@ -582,9 +590,9 @@ class AdminDashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'suspend',
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.block, size: 18, color: Colors.orange),
                     SizedBox(width: 8),
@@ -592,9 +600,9 @@ class AdminDashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'activate',
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.check_circle, size: 18, color: Colors.green),
                     SizedBox(width: 8),
@@ -648,7 +656,8 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
+        Obx(
+          () => Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDarkMode ? Colors.grey[850] : Colors.white,
@@ -695,6 +704,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ],
     );

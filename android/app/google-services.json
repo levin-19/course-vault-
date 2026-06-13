@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "1097280974829",
-    "project_id": "coursevault-12ac3",
-    "storage_bucket": "coursevault-12ac3.firebasestorage.app"
+    "project_number": "14521645431",
+    "firebase_url": "https://apartment-inspection-default-rtdb.firebaseio.com",
+    "project_id": "apartment-inspection",
+    "storage_bucket": "apartment-inspection.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1097280974829:android:d80a599209d2e30d7a41e4",
+        "mobilesdk_app_id": "1:14521645431:android:eeb582de5711af4cf18972",
         "android_client_info": {
           "package_name": "com.levelzero.coursevault"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCOWmLWIyQAh2XRJlLepUEv_sPYI1pf9fs"
+          "current_key": "AIzaSyCu9svUqJvnA_Js_ong9_HQhuRunpV4QW8"
         }
       ],
       "services": {

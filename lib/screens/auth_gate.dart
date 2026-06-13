@@ -22,19 +22,19 @@ class AuthGate extends StatelessWidget {
           );
         }
         
-        // If user is logged in, check if admin
+        // If user is logged in, check role
         if (snapshot.hasData) {
-          return FutureBuilder<bool>(
-            future: _checkIfAdmin(snapshot.data!.uid),
-            builder: (context, adminSnapshot) {
-              if (adminSnapshot.connectionState == ConnectionState.waiting) {
+          return FutureBuilder<String>(
+            future: _getUserRole(snapshot.data!.uid),
+            builder: (context, roleSnapshot) {
+              if (roleSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );
               }
               
               // If admin, show admin dashboard
-              if (adminSnapshot.data == true) {
+              if (roleSnapshot.data == 'admin') {
                 return const AdminDashboardScreen();
               }
               
@@ -50,8 +50,8 @@ class AuthGate extends StatelessWidget {
     );
   }
 
-  /// Check if user is admin
-  Future<bool> _checkIfAdmin(String userId) async {
+  /// Get and validate user role
+  Future<String> _getUserRole(String userId) async {
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
@@ -59,13 +59,32 @@ class AuthGate extends StatelessWidget {
           .get();
       
       if (doc.exists) {
-        final role = doc.data()?['role'] ?? 'user';
-        return role == 'admin';
+        final role = doc.data()?['role'];
+        if (role == 'admin') {
+          return 'admin';
+        } else if (role == 'student') {
+          return 'student';
+        } else {
+          // Update missing or invalid role to student
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .update({'role': 'student'});
+          return 'student';
+        }
       }
-      return false;
+      
+      // Document doesn't exist, create it with student role
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'uid': userId,
+        'role': 'student',
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return 'student';
     } catch (e) {
-      print('Error checking admin status: $e');
-      return false;
+      print('Error checking user role: $e');
+      return 'student';
     }
   }
 }
