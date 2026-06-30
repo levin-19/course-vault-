@@ -14,7 +14,7 @@ class SignupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(SignupController());
     final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(

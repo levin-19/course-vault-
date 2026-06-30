@@ -6,6 +6,7 @@ class Resource {
   final String category;
   final String description;
   final DateTime createdAt;
+  final String? videoUrl;
 
   Resource({
     required this.id,
@@ -15,6 +16,7 @@ class Resource {
     required this.category,
     required this.description,
     required this.createdAt,
+    this.videoUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +28,7 @@ class Resource {
       'category': category,
       'description': description,
       'createdAt': createdAt.toIso8601String(),
+      if (videoUrl != null) 'videoUrl': videoUrl,
     };
   }
 
@@ -38,6 +41,7 @@ class Resource {
       category: map['category'] ?? '',
       description: map['description'] ?? '',
       createdAt: DateTime.parse(map['createdAt']),
+      videoUrl: map['videoUrl'] as String?,
     );
   }
 }

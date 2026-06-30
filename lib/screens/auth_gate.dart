@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'admin_dashboard_screen.dart';
@@ -22,10 +23,10 @@ class AuthGate extends StatelessWidget {
           );
         }
         
-        // If user is logged in, check role
+        // If user is logged in, check role and status
         if (snapshot.hasData) {
-          return FutureBuilder<String>(
-            future: _getUserRole(snapshot.data!.uid),
+          return FutureBuilder<Map<String, dynamic>>(
+            future: _getUserRoleAndStatus(snapshot.data!.uid),
             builder: (context, roleSnapshot) {
               if (roleSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
@@ -33,8 +34,25 @@ class AuthGate extends StatelessWidget {
                 );
               }
               
+              final status = roleSnapshot.data?['status'] ?? 'active';
+              if (status == 'suspended') {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  FirebaseAuth.instance.signOut();
+                  Get.snackbar(
+                    'Suspended',
+                    'Your account has been suspended by the administrator.',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                });
+                return const LoginScreen();
+              }
+              
+              final role = roleSnapshot.data?['role'] ?? 'student';
+              
               // If admin, show admin dashboard
-              if (roleSnapshot.data == 'admin') {
+              if (role == 'admin') {
                 return const AdminDashboardScreen();
               }
               
@@ -50,8 +68,8 @@ class AuthGate extends StatelessWidget {
     );
   }
 
-  /// Get and validate user role
-  Future<String> _getUserRole(String userId) async {
+  /// Get and validate user role and status
+  Future<Map<String, dynamic>> _getUserRoleAndStatus(String userId) async {
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
@@ -59,19 +77,10 @@ class AuthGate extends StatelessWidget {
           .get();
       
       if (doc.exists) {
-        final role = doc.data()?['role'];
-        if (role == 'admin') {
-          return 'admin';
-        } else if (role == 'student') {
-          return 'student';
-        } else {
-          // Update missing or invalid role to student
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .update({'role': 'student'});
-          return 'student';
-        }
+        final data = doc.data() ?? {};
+        final role = data['role'] ?? 'student';
+        final status = data['status'] ?? 'active';
+        return {'role': role, 'status': status};
       }
       
       // Document doesn't exist, create it with student role
@@ -81,10 +90,10 @@ class AuthGate extends StatelessWidget {
         'status': 'active',
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      return 'student';
+      return {'role': 'student', 'status': 'active'};
     } catch (e) {
-      print('Error checking user role: $e');
-      return 'student';
+      print('Error checking user role and status: $e');
+      return {'role': 'student', 'status': 'active'};
     }
   }
 }

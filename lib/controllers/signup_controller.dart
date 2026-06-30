@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/user_service.dart';
 
 class SignupController extends GetxController {
@@ -30,12 +33,24 @@ class SignupController extends GetxController {
   /// Form key used by [SignupScreen] to trigger field-level validation.
   final formKey = GlobalKey<FormState>();
 
-  // Profile image — UI only (picker not yet connected)
+  // Profile image
   final profileImagePath = Rxn<String>();
+  final _picker = ImagePicker();
 
-  /// Shows the camera icon in the UI but does NOT open a file picker.
-  void pickProfileImage() {
-    // TODO: integrate image_picker when backend upload is ready
+  /// Opens the image gallery to pick a profile photo.
+  Future<void> pickProfileImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        profileImagePath.value = image.path;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to pick image: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   /// Clears the locally selected image path.
@@ -171,8 +186,28 @@ class SignupController extends GetxController {
         password: passwordController.text,
       );
 
-      final userId = userCredential.user?.uid;
-      if (userId == null) throw Exception('Failed to create user');
+      final user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'User creation succeeded but no user was returned.',
+        );
+      }
+      final userId = user.uid;
+
+      String? profileImageUrl;
+      if (profileImagePath.value != null) {
+        try {
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('profile_images')
+              .child('$userId.jpg');
+          final uploadTask = await storageRef.putFile(File(profileImagePath.value!));
+          profileImageUrl = await uploadTask.ref.getDownloadURL();
+        } catch (e) {
+          print('Error uploading profile image: $e');
+        }
+      }
 
       final cgpaValue = double.tryParse(cgpaController.text) ?? 0.0;
 
@@ -190,6 +225,7 @@ class SignupController extends GetxController {
         'cgpa': cgpaValue,
         'role': 'student', // every new user is a student by default
         'status': 'active',
+        'profileImageUrl': profileImageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
 

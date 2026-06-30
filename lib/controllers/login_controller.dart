@@ -85,6 +85,17 @@ class LoginController extends GetxController {
         }, SetOptions(merge: true));
         Get.offAllNamed('/home');
       } else {
+        final status = doc.data()?['status'] ?? 'active';
+        if (status == 'suspended') {
+          await FirebaseAuth.instance.signOut();
+          Get.snackbar('Suspended', 'Your account has been suspended by the administrator.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white);
+          isLoading(false);
+          return;
+        }
+
         final role = doc.data()?['role'];
         if (role == 'admin') {
           Get.offAllNamed('/admin-dashboard');

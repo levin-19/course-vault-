@@ -12,7 +12,7 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AdminDashboardController());
-    final isDarkMode = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
@@ -514,13 +514,18 @@ class AdminDashboardScreen extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: CircleAvatar(
         backgroundColor: const Color(0xFF1F6FEB).withOpacity(0.1),
-        child: Text(
-          user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
-          style: const TextStyle(
-            color: Color(0xFF1F6FEB),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+            ? NetworkImage(user.avatarUrl!)
+            : null,
+        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+            ? Text(
+                user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
+                style: const TextStyle(
+                  color: Color(0xFF1F6FEB),
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : null,
       ),
       title: Text(
         user.fullName,

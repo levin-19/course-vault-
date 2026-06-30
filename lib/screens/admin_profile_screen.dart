@@ -11,7 +11,7 @@ class AdminProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(AdminProfileController());
     final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor:

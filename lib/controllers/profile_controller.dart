@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_service.dart';
 
 class ProfileController extends GetxController {
@@ -10,12 +14,24 @@ class ProfileController extends GetxController {
   final isEditing = false.obs;
   final isAdmin = false.obs;
 
-  // Profile image — UI only (picker not yet connected)
+  // Profile image
   final profileImagePath = Rxn<String>();
+  final _picker = ImagePicker();
 
-  /// Shows the camera icon in the UI but does NOT open a file picker.
-  void pickProfileImage() {
-    // TODO: integrate image_picker when backend upload is ready
+  /// Opens the image gallery to pick a profile photo.
+  Future<void> pickProfileImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        profileImagePath.value = image.path;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to pick image: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   // User profile data - Static (now editable)
@@ -46,12 +62,6 @@ class ProfileController extends GetxController {
       'subtitle': 'Update your personal information',
       'icon': 'edit',
       'action': 'edit_profile',
-    },
-    {
-      'title': 'Change Password',
-      'subtitle': 'Update your security settings',
-      'icon': 'lock',
-      'action': 'change_password',
     },
     {
       'title': 'Theme Settings',
@@ -126,7 +136,7 @@ class ProfileController extends GetxController {
           'phone': userData['phone'] ?? '',
           'cgpa': userData['cgpa'] ?? 0.0,
           'joinDate': userData['createdAt']?.toString().split(' ')[0] ?? DateTime.now().toString().split(' ')[0],
-          'profileImageUrl': null,
+          'profileImageUrl': userData['profileImageUrl'],
         };
         userProfile(profileData);
         
@@ -161,6 +171,23 @@ class ProfileController extends GetxController {
             snackPosition: SnackPosition.BOTTOM);
         return;
       }
+
+      String? profileImageUrl = userProfile['profileImageUrl']?.toString();
+      if (profileImagePath.value != null) {
+        try {
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('profile_images')
+              .child('${user.uid}.jpg');
+          final uploadTask = await storageRef.putFile(File(profileImagePath.value!));
+          profileImageUrl = await uploadTask.ref.getDownloadURL();
+          
+          // Clear local picked path since it is now uploaded and stored remotely
+          profileImagePath.value = null;
+        } catch (e) {
+          print('Error uploading profile image: $e');
+        }
+      }
       
       // Update Firestore
       await FirebaseFirestore.instance
@@ -171,6 +198,7 @@ class ProfileController extends GetxController {
         'studentId': studentIdController.text,
         'phone': phoneController.text,
         'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
+        if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
       });
       
       // Update local state
@@ -180,6 +208,7 @@ class ProfileController extends GetxController {
         'studentId': studentIdController.text,
         'phone': phoneController.text,
         'cgpa': double.tryParse(cgpaController.text) ?? 0.0,
+        if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
       });
       userProfile(updatedProfile);
       
@@ -206,6 +235,8 @@ class ProfileController extends GetxController {
     studentIdController.text = userProfile['studentId'].toString();
     phoneController.text = userProfile['phone'].toString();
     cgpaController.text = userProfile['cgpa'].toString();
+    // Discard any locally picked image
+    profileImagePath.value = null;
     isEditing(false);
   }
 
@@ -215,15 +246,17 @@ class ProfileController extends GetxController {
       case 'edit_profile':
         toggleEditMode();
         break;
-      case 'change_password':
-        Get.snackbar('Change Password', 'Change password feature coming soon',
-            snackPosition: SnackPosition.BOTTOM);
-        break;
       case 'theme':
-        Get.snackbar('Theme', 'Theme settings coming soon',
-            snackPosition: SnackPosition.BOTTOM);
+        _toggleTheme();
         break;
     }
+  }
+
+  Future<void> _toggleTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = Get.isDarkMode;
+    Get.changeThemeMode(isDark ? ThemeMode.light : ThemeMode.dark);
+    await prefs.setBool('isDarkMode', !isDark);
   }
 
   // Logout

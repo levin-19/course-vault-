@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_user.dart';
@@ -75,8 +76,18 @@ class HomeController extends GetxController {
         (userProfile) {
           print('DEBUG: User profile stream update: $userProfile');
           if (userProfile != null) {
-            currentUser.value = AppUser.fromMap(userId, userProfile);
-            print('DEBUG: Current user loaded: ${currentUser.value?.fullName}');
+            final appUser = AppUser.fromMap(userId, userProfile);
+            currentUser.value = appUser;
+            print('DEBUG: Current user loaded: ${appUser.fullName}');
+
+            if (appUser.status == 'suspended') {
+              FirebaseAuth.instance.signOut();
+              Get.offAllNamed('/login');
+              Get.snackbar('Suspended', 'Your account has been suspended by the administrator.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white);
+            }
           } else {
             print('DEBUG: User profile is null from Firestore');
           }

@@ -64,7 +64,7 @@ class AppUser {
       uid: uid,
       fullName: (map['fullName'] ?? '') as String,
       email: (map['email'] ?? '') as String,
-      avatarUrl: map['avatarUrl'] as String?,
+      avatarUrl: (map['profileImageUrl'] ?? map['avatarUrl']) as String?,
       studentId: map['studentId'] as String?,
       university: map['university'] as String?,
       department: map['department'] as String?,

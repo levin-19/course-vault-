@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash_screen.dart';
@@ -10,11 +11,16 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const CourseVaultApp());
+
+  final prefs = await SharedPreferences.getInstance();
+  final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+
+  runApp(CourseVaultApp(isDarkMode: isDarkMode));
 }
 
 class CourseVaultApp extends StatelessWidget {
-  const CourseVaultApp({super.key});
+  final bool isDarkMode;
+  const CourseVaultApp({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +28,20 @@ class CourseVaultApp extends StatelessWidget {
       title: 'CourseVault',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const SplashScreen(),
       getPages: AppRoutes.routes,
     );

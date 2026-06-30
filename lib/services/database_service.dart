@@ -430,16 +430,29 @@ class DatabaseService extends GetxService {
     }
   }
 
-  /// Deactivate/ban a user (admin only)
+  /// Suspend a user (admin only) — sets status to 'suspended'
   Future<void> deactivateUser(String userId) async {
     try {
       await _firestore.collection('users').doc(userId).update({
-        'isActive': false,
-        'deactivatedAt': FieldValue.serverTimestamp(),
+        'status': 'suspended',
+        'suspendedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception('Failed to deactivate user: $e');
+      throw Exception('Failed to suspend user: $e');
+    }
+  }
+
+  /// Activate a suspended user (admin only) — sets status to 'active'
+  Future<void> activateUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'status': 'active',
+        'activatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to activate user: $e');
     }
   }
 

@@ -247,17 +247,25 @@ class AdminController extends GetxController {
     }
   }
 
-  /// Deactivate/ban a user
+  /// Deactivate/suspend a user
   Future<void> deactivateUser(String userId) async {
     try {
       await _databaseService.deactivateUser(userId);
-      allUsers.removeWhere((user) => user.uid == userId);
-      totalUsers.value = allUsers.length;
-      updateFilteredUsers();
-      Get.snackbar('Success', 'User deactivated');
+      Get.snackbar('Success', 'User suspended successfully');
     } catch (e) {
       print('ERROR: Failed to deactivate user: $e');
-      Get.snackbar('Error', 'Failed to deactivate user');
+      Get.snackbar('Error', 'Failed to suspend user');
+    }
+  }
+
+  /// Activate a user
+  Future<void> activateUser(String userId) async {
+    try {
+      await _databaseService.activateUser(userId);
+      Get.snackbar('Success', 'User activated successfully');
+    } catch (e) {
+      print('ERROR: Failed to activate user: $e');
+      Get.snackbar('Error', 'Failed to activate user');
     }
   }
 

@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(HomeController());
     final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
@@ -70,10 +70,18 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(2),
-                child: CircleAvatar(
-                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
-                  child: const Icon(Icons.person, color: Color(0xFF1F6FEB)),
-                ),
+                child: Obx(() {
+                  final avatarUrl = controller.currentUser.value?.avatarUrl;
+                  return CircleAvatar(
+                    backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: avatarUrl == null || avatarUrl.isEmpty
+                        ? const Icon(Icons.person, color: Color(0xFF1F6FEB))
+                        : null,
+                  );
+                }),
               ),
             ),
           ),
@@ -158,14 +166,23 @@ class HomeScreen extends StatelessWidget {
               child: CircleAvatar(
                 radius: 32,
                 backgroundColor: Colors.white.withOpacity(0.2),
-                child: Text(
-                  (controller.currentUser.value?.fullName ?? 'S').characters.first.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                backgroundImage: controller.currentUser.value?.avatarUrl != null &&
+                        controller.currentUser.value!.avatarUrl!.isNotEmpty
+                    ? NetworkImage(controller.currentUser.value!.avatarUrl!)
+                    : null,
+                child: controller.currentUser.value?.avatarUrl == null ||
+                        controller.currentUser.value!.avatarUrl!.isEmpty
+                    ? Text(
+                        (controller.currentUser.value?.fullName ?? 'S').isNotEmpty
+                            ? (controller.currentUser.value?.fullName ?? 'S').characters.first.toUpperCase()
+                            : 'S',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
               ),
             ),
             const SizedBox(width: 16),

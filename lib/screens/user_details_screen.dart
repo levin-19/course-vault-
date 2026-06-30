@@ -21,7 +21,7 @@ class UserDetailsScreen extends StatelessWidget {
     // Find the existing UserManagementController (created in UsersListScreen)
     final controller = Get.find<UserManagementController>();
     final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor:
@@ -169,14 +169,19 @@ class UserDetailsScreen extends StatelessWidget {
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.white.withOpacity(0.2),
-            child: Text(
-              user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                ? NetworkImage(user.avatarUrl!)
+                : null,
+            child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+                ? Text(
+                    user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(height: 12),
 

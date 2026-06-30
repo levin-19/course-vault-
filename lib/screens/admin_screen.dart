@@ -12,7 +12,7 @@ class AdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(AdminController());
     final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF8F9FA),
@@ -328,20 +328,43 @@ class AdminScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2196F3).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  user.studentId ?? 'No ID',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2196F3),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2196F3).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      user.studentId ?? 'No ID',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2196F3),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: user.status == 'suspended'
+                          ? Colors.red.withOpacity(0.15)
+                          : Colors.green.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      user.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: user.status == 'suspended' ? Colors.red : Colors.green,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -377,16 +400,28 @@ class AdminScreen extends StatelessWidget {
                 Colors.orange,
                 () => controller.changeUserRole(user.uid, 'user'),
               ),
-              _buildActionButton(
-                'Deactivate',
-                Icons.block,
-                Colors.red,
-                () => _showConfirmDialog(
-                  'Deactivate User',
-                  'Are you sure you want to deactivate this user?',
-                  () => controller.deactivateUser(user.uid),
+              if (user.status == 'suspended')
+                _buildActionButton(
+                  'Activate',
+                  Icons.check_circle,
+                  Colors.green,
+                  () => _showConfirmDialog(
+                    'Activate User',
+                    'Are you sure you want to activate this user?',
+                    () => controller.activateUser(user.uid),
+                  ),
+                )
+              else
+                _buildActionButton(
+                  'Suspend',
+                  Icons.block,
+                  Colors.red,
+                  () => _showConfirmDialog(
+                    'Suspend User',
+                    'Are you sure you want to suspend this user?',
+                    () => controller.deactivateUser(user.uid),
+                  ),
                 ),
-              ),
             ],
           ),
         ],
