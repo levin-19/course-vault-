@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/notes_controller.dart';
+import '../../config/app_colors.dart';
 
 class CreateNoteScreen extends StatefulWidget {
   const CreateNoteScreen({super.key});
@@ -27,16 +28,50 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text('Create Note'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.premiumGradient,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.16),
+                    blurRadius: 26,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('Quick Note', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 6),
+                  Text('Capture ideas, upload resources, and save', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
             TextField(
               controller: titleController,
               decoration: const InputDecoration(
@@ -77,14 +112,13 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: controller.pickAttachments,
-              icon: const Icon(Icons.attach_file, color: Colors.deepPurple),
-              label: const Text(
-                'Select Files to Attach',
-                style: TextStyle(color: Colors.deepPurple),
-              ),
+              icon: const Icon(Icons.attach_file, color: Colors.white),
+              label: const Text('Select Files to Attach', style: TextStyle(color: Colors.white)),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.deepPurple),
+                side: const BorderSide(color: Colors.white24),
                 minimumSize: const Size(double.infinity, 48),
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 12),
@@ -108,9 +142,9 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                           height: 90,
                           margin: const EdgeInsets.only(right: 12, top: 8),
                           decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                            color: isDarkMode ? Colors.grey[850] : AppColors.extraLightGrey,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.22)),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
@@ -163,40 +197,31 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                 onPressed: controller.isUploading.value
                     ? null
                     : () {
-                        if (titleController.text.isNotEmpty &&
-                            contentController.text.isNotEmpty) {
-                          controller.createNote(
-                            titleController.text,
-                            contentController.text,
-                            subjectController.text,
-                          );
+                        if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+                          controller.createNote(titleController.text, contentController.text, subjectController.text);
                         } else {
                           Get.snackbar('Error', 'Please fill all fields');
                         }
                       },
                 icon: controller.isUploading.value
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.save),
-                label: Text(
-                    controller.isUploading.value ? 'Uploading...' : 'Save Note'),
+                label: Text(controller.isUploading.value ? 'Uploading...' : 'Save Note'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
           ],
         ),
       ),
-    );
+    ),
+          ]
+   
+    ),),);
   }
 
   @override

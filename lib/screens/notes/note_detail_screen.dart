@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/notes_controller.dart';
 import '../../models/note.dart';
+import '../../config/app_colors.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   const NoteDetailScreen({super.key});
@@ -61,10 +62,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(isEditing ? 'Edit Note' : 'Note Details'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(isEditing ? Icons.save : Icons.edit),
@@ -84,10 +88,32 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.premiumGradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: AppColors.primary.withOpacity(0.14), blurRadius: 22, offset: const Offset(0, 12)),
+                ],
+              ),
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(note.title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                Text(note.subject, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             TextField(
               controller: titleController,
               enabled: isEditing,
@@ -148,10 +174,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             width: 90,
                             height: 90,
                             margin: const EdgeInsets.only(right: 12, top: 8),
-                            decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                              decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.grey[850] : AppColors.extraLightGrey,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.22)),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
@@ -215,11 +241,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: controller.pickAttachments,
-                icon: const Icon(Icons.attach_file, color: Colors.deepPurple),
-                label: const Text('Select More Files', style: TextStyle(color: Colors.deepPurple)),
+                icon: const Icon(Icons.attach_file, color: Colors.white),
+                label: const Text('Select More Files', style: TextStyle(color: Colors.white)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.deepPurple),
+                  side: const BorderSide(color: Colors.white24),
                   minimumSize: const Size(double.infinity, 44),
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -293,7 +321,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ],
         ),
       ),
+            )
+          ],
+        ),
+      )
     );
+
+
   }
 
   @override
